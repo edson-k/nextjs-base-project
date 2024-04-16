@@ -11,4 +11,5 @@ export enum ErrorCode {
   InternalServerError = 'internal-server-error',
   NewPasswordMatchesOld = 'new-password-matches-old',
   ThirdPartyIdentityProviderEnabled = 'third-party-identity-provider-enabled',
+  CredentialsSignin = 'CredentialsSignin',
 }

@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getSession } from 'next-auth/react';
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "../../[...nextauth]"
 import { authenticator } from 'otplib';
 import User, { IUser } from '../../../../../models/User';
 import { symmetricDecrypt } from '../../../../../utils/crypto';
@@ -10,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const session = await getSession({ req });
+  const session: any = await getServerSession(req, res, authOptions)
   if (!session) {
     return res.status(401).json({ message: 'Not authenticated' });
   }

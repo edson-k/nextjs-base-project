@@ -18,14 +18,14 @@ export default function SignIn(props: SignInProps) {
   const toast = useToast();
 
   const { data: session } = useSession();
-  console.log('Session: ', session);
+  const sessionData = session?.user;
+  console.log('Session: ', sessionData);
 
   const router = useRouter();
 
   const handleSignIn = async (e: React.SyntheticEvent) => {
     e.preventDefault();
 
-    console.log('Email: ', email);
     await signIn('credentials', {
       redirect: false,
       email,
@@ -40,6 +40,7 @@ export default function SignIn(props: SignInProps) {
 
         switch (response?.error) {
           case ErrorCode.IncorrectPassword:
+          case ErrorCode.CredentialsSignin:
             toast({
               title: 'Invalid credentials',
               status: 'error',

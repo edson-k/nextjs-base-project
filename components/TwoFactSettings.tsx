@@ -123,7 +123,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
           <>
             <ModalHeader>Enable two-factor authentication</ModalHeader>
             <ModalBody>
-              <Input type={'password'} placeholder="*******" size="md" value={password} onChange={(event) => setPassword(event.target.value)} />
+              <Input type={'password'} placeholder="*******" size="md" value={password} onChange={(event: any) => setPassword(event.target.value)} />
             </ModalBody>
             <ModalFooter>
               <Button mr={3} onClick={onClose}>
@@ -203,7 +203,12 @@ const DisableTwoFactSetupModal = ({ isOpen, onClose, onDisable }: { isOpen: bool
           title: 'Incorrect code. Please try again',
           status: 'error',
         });
-      } else if (body.error) {
+      } else if (body.error === ErrorCode.SecondFactorRequired) {
+        toast({
+          title: 'Code is empty. Please try again',
+          status: 'error',
+        });
+      } else if (body.error || body.message === 'Not authenticated') {
         toast({
           title: 'Sorry something went wrong',
           status: 'error',
@@ -213,9 +218,8 @@ const DisableTwoFactSetupModal = ({ isOpen, onClose, onDisable }: { isOpen: bool
           title: 'Successfully disabled 2FA',
           status: 'success',
         });
+        onDisable();
       }
-
-      onDisable();
     } catch (e) {
       toast({
         title: 'Sorry something went wrong',

@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
 import { symmetricEncrypt } from '../../../../../utils/crypto';
-import { getSession, signOut, useSession } from 'next-auth/react';
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "../../[...nextauth]"
 import { ErrorCode } from '../../../../../utils/ErrorCode';
 import User, { IUser } from '../../../../../models/User';
 import { isPasswordValid } from '../../../../../utils/hash';
@@ -12,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const session = await getSession({ req });
+  const session: any = await getServerSession(req, res, authOptions)
   if (!session) {
     return res.status(401).json({ message: 'Not authenticated' });
   }

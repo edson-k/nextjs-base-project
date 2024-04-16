@@ -7,7 +7,7 @@ import db from '../../../utils/db';
 import { ErrorCode } from '../../../utils/ErrorCode';
 import { isPasswordValid } from '../../../utils/hash';
 
-export default NextAuth({
+export const authOptions: any = {
   pages: {
     signIn: '/',
   },
@@ -79,4 +79,6 @@ export default NextAuth({
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 Days
   },
-});
+}
+
+export default NextAuth(authOptions);
