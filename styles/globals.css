@@ -19,8 +19,14 @@ a {
   html {
     color-scheme: dark;
   }
+
   body {
-    color: white;
-    background: black;
+    color: black;
+    background: white;
   }
+}
+
+:root {
+  --chakra-colors-chakra-body-bg: #f7fafc;
+  --chakra-colors-chakra-body-text: #1a202c;
 }

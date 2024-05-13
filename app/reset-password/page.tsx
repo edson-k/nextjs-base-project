@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Button,
   Flex,
@@ -9,7 +11,6 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 
 export default function ResetPassword() {
@@ -31,17 +32,38 @@ export default function ResetPassword() {
         Accept: 'application/json',
       },
     })
-      .then((res) => {
+      .then(async (res) => {
+        const data = await res.json();
+        if (res.status === 200) {
+          setIsLoading(false);
+          toast({
+            title: 'Message Sent',
+            status: 'success',
+            duration: 2000,
+            position: 'top',
+          });
+        } else {
+          setIsLoading(false);
+          toast({
+            title: 'Error',
+            description: data?.message || 'An error occurred',
+            status: 'error',
+            duration: 2000,
+            position: 'top',
+          });
+        }
+      })
+      .catch((error) => {
         setIsLoading(false);
         toast({
-          title: 'Message Sent',
-          status: 'success',
+          title: 'Error',
+          description: error?.message || 'An error occurred',
+          status: 'error',
           duration: 2000,
           position: 'top',
         });
-        console.log(res);
-      })
-      .catch((error) => console.log('Error: ', error));
+        console.log('Error: ', error);
+      });
   };
 
   return (

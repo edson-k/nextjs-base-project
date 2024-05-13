@@ -1,8 +1,8 @@
 import { Modal, ModalOverlay, Flex, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, FormControl, FormLabel, Switch, useDisclosure, Text, Input, useToast } from '@chakra-ui/react';
 import { useState } from 'react';
-import { ErrorCode } from '../utils/ErrorCode';
-import TwoFactAuth from './TwoFactAuth';
-import { IUser } from '../models/User';
+import { ErrorCode } from '@/utils/ErrorCode';
+import TwoFactAuth from '@/components/TwoFactAuth';
+import { IUser } from '@/models/User';
 
 enum SetupStep {
   ConfirmPassword,
@@ -255,7 +255,7 @@ const DisableTwoFactSetupModal = ({ isOpen, onClose, onDisable }: { isOpen: bool
 export default function TwoFactSettings({ user }: { user: IUser }) {
   const { isOpen: isOpenSetupModal, onOpen: onOpenSetupModal, onClose: onCloseSetupModal } = useDisclosure();
   const { isOpen: isOpenDisableModal, onOpen: onOpenDisableModal, onClose: onCloseDisableModal } = useDisclosure();
-  const [isEnabled, setEnabled] = useState(user.twoFactorEnabled);
+  const [isEnabled, setEnabled] = useState(user?.twoFactorEnabled);
 
   function handleOnEnable() {
     setEnabled(true);
