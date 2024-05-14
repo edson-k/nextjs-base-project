@@ -5,8 +5,8 @@ import React, { Dispatch, SetStateAction, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ErrorCode } from '../utils/ErrorCode';
-import TwoFactAuth from './TwoFactAuth';
+import { ErrorCode } from '@/utils/ErrorCode';
+import TwoFactAuth from '@/components/TwoFactAuth';
 
 interface SignInProps {
     isSignInMode: boolean;

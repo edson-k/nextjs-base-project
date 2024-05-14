@@ -1,6 +1,6 @@
 import { Flex, Text } from '@chakra-ui/react';
-import { UserData } from '@/app/services/fetch';
-import Content from '@/app/profile/content';
+import { UserData } from '@/app/services/fetchServer';
+import Content from '@/app/profile/components/content';
 import { redirect } from 'next/navigation'
 
 export default async function Profile() {
