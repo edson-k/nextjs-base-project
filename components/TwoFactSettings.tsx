@@ -1,9 +1,10 @@
-import { Modal, ModalOverlay, Flex, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, FormControl, FormLabel, Switch, useDisclosure, Text, Input, useToast } from '@chakra-ui/react';
+import { Modal, ModalOverlay, Flex, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, FormControl, FormLabel, Switch, useDisclosure, Text, Input, useToast, InputGroup, InputLeftAddon, Box } from '@chakra-ui/react';
 import { useState } from 'react';
 import { ErrorCode } from '@/utils/ErrorCode';
 import TwoFactAuth from '@/components/TwoFactAuth';
 import { IUser } from '@/models/User';
 import { fetchTwoFactorDisable, fetchTwoFactorEnable, fetchTwoFactorSetup } from '@/app/services/fetchClient';
+import { LockIcon } from '@chakra-ui/icons';
 
 enum SetupStep {
     ConfirmPassword,
@@ -230,6 +231,7 @@ export default function TwoFactSettings({ user }: { user: IUser }) {
     const { isOpen: isOpenSetupModal, onOpen: onOpenSetupModal, onClose: onCloseSetupModal } = useDisclosure();
     const { isOpen: isOpenDisableModal, onOpen: onOpenDisableModal, onClose: onCloseDisableModal } = useDisclosure();
     const [isEnabled, setEnabled] = useState(user?.twoFactorEnabled);
+    const [recoveryCode, setRecoveryCode] = useState(user?.recoveryCode);
 
     function handleOnEnable() {
         setEnabled(true);
@@ -242,15 +244,27 @@ export default function TwoFactSettings({ user }: { user: IUser }) {
     }
 
     return (
-        <Flex justifyContent={'center'} marginTop="2em">
-            <FormControl display="flex" alignItems="center" justifyContent="center">
-                <FormLabel htmlFor="email-alerts" mb="0">
-                    Two factor authentication
-                </FormLabel>
-                <Switch colorScheme="teal" id="email-alerts" isChecked={isEnabled} onChange={isEnabled ? onOpenDisableModal : onOpenSetupModal} />
-            </FormControl>
-            <TwoFactSetupModal isOpen={isOpenSetupModal} onClose={onCloseSetupModal} onEnable={handleOnEnable} />
-            <DisableTwoFactSetupModal isOpen={isOpenDisableModal} onClose={onCloseDisableModal} onDisable={handleOnDisable} />
-        </Flex>
+        <>
+            <Flex justifyContent={'center'} marginTop="2em">
+                <FormControl display="flex" alignItems="center" justifyContent="center">
+                    <FormLabel htmlFor="email-alerts" mb="0">
+                        Two factor authentication
+                    </FormLabel>
+                    <Switch colorScheme="teal" id="email-alerts" isChecked={isEnabled} onChange={isEnabled ? onOpenDisableModal : onOpenSetupModal} />
+
+                </FormControl>
+                <TwoFactSetupModal isOpen={isOpenSetupModal} onClose={onCloseSetupModal} onEnable={handleOnEnable} />
+                <DisableTwoFactSetupModal isOpen={isOpenDisableModal} onClose={onCloseDisableModal} onDisable={handleOnDisable} />
+            </Flex>
+            <Flex justifyContent={'center'} marginTop="2em">
+                {isEnabled ?
+                    <Box display="flex" alignItems="center" justifyContent="center">
+                        <InputGroup>
+                            <InputLeftAddon><LockIcon />&nbsp;Recovery Code</InputLeftAddon>
+                            <Input type={'text'} placeholder={''} name="recoveryCode" value={recoveryCode} readOnly />
+                        </InputGroup>
+                    </Box> : ''}
+            </Flex>
+        </>
     );
 }

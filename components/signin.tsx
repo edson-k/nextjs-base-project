@@ -1,12 +1,14 @@
 'use client';
 
-import { Box, Button, Flex, FormControl, FormErrorMessage, Heading, Input, Text, VStack, useToast } from '@chakra-ui/react';
+import { Box, Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, VStack, useToast } from '@chakra-ui/react';
+import { EmailIcon, LockIcon } from '@chakra-ui/icons'
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ErrorCode } from '@/utils/ErrorCode';
 import TwoFactAuth from '@/components/TwoFactAuth';
+import RecoveryCode from '@/components/RecoveryCode';
 
 interface SignInProps {
     isSignInMode: boolean;
@@ -17,11 +19,29 @@ export default function SignIn(props: SignInProps) {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [totpCode, setTotpCode] = useState('');
+    const [recoveryCode, setRecoveryCode] = useState('');
     const [showOTP, setShowOTP] = useState<boolean>(false);
+    const [showRecoveryCode, setShowRecoveryCode] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [showEmail, setShowEmail] = useState<boolean>(true);
     const toast = useToast();
     const router = useRouter();
+
+    function recoveryCodeEvent(event: any) {
+        event.preventDefault();
+        // perform some action here
+        setRecoveryCode('');
+        setShowOTP(false);
+        setShowRecoveryCode(true);
+    }
+
+    function twoFactAuthEvent(event: any) {
+        event.preventDefault();
+        // perform some action here
+        setRecoveryCode('');
+        setShowRecoveryCode(false);
+        setShowOTP(true);
+    }
 
     const handleSignIn = async (e: React.SyntheticEvent) => {
         e.preventDefault();
@@ -32,6 +52,9 @@ export default function SignIn(props: SignInProps) {
                 email,
                 password,
                 totpCode,
+                recoveryCode,
+                showOTP,
+                showRecoveryCode,
             })
                 .then((response) => {
                     if (response?.ok) {
@@ -47,9 +70,35 @@ export default function SignIn(props: SignInProps) {
                                 status: 'error',
                             });
                             return;
-                        case ErrorCode.SecondFactorRequired:
+                        case ErrorCode.IncorrectRecoveryCode:
+                            setRecoveryCode('');
+                            toast({
+                                title: 'Invalid credentials',
+                                status: 'error',
+                            });
+                            return;
+                        case ErrorCode.SecondFactorRequest:
+                            setShowEmail(false);
                             setShowPassword(false);
                             setShowOTP(true);
+                            return;
+                        case ErrorCode.SecondFactorRequired:
+                            setShowPassword(false);
+                            setShowRecoveryCode(false);
+                            setShowOTP(true);
+                            toast({
+                                title: 'Two Factor Authentication Required',
+                                status: 'warning',
+                            });
+                            return;
+                        case ErrorCode.RecoveryCodeRequired:
+                            setShowPassword(false);
+                            setShowOTP(false);
+                            setShowRecoveryCode(true);
+                            toast({
+                                title: 'Recovery Code Required',
+                                status: 'warning',
+                            });
                             return;
                     }
                 })
@@ -74,23 +123,53 @@ export default function SignIn(props: SignInProps) {
                     <form onSubmit={handleSignIn} style={{ width: '75%' }}>
                         <VStack spacing={5} w={'100%'}>
                             {showEmail &&
-                                <FormControl isRequired={true}>
-                                    <Input type={'email'} placeholder={'Email'} name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                    <FormErrorMessage>{email === '' ? 'Email is requi#319795' : 'Invalid email'}</FormErrorMessage>
-                                </FormControl>
+                                <>
+                                    <Text fontSize={'1rem'} textAlign={'center'} color={'black  '}>
+                                        E-Mail
+                                    </Text>
+                                    <FormControl isRequired={true}>
+                                        <InputGroup>
+                                            <InputLeftAddon><EmailIcon /></InputLeftAddon>
+                                            <Input type={'email'} placeholder={''} name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                            <FormErrorMessage>{email === '' ? 'Email is requi#319795' : 'Invalid email'}</FormErrorMessage>
+                                        </InputGroup>
+                                    </FormControl>
+                                </>
                             }
-                            {showPassword && <FormControl isRequired={true} mb={2}>
-                                <Input type={'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                                <FormErrorMessage>Password cannot be less than 8 characters</FormErrorMessage>
-                            </FormControl>
+                            {showPassword &&
+                                <>
+                                    <Text fontSize={'1rem'} textAlign={'center'} color={'black  '}>
+                                        Password
+                                    </Text>
+                                    <FormControl isRequired={true} mb={2}>
+                                        <InputGroup>
+                                            <InputLeftAddon><LockIcon /></InputLeftAddon>
+                                            <Input type={'password'} placeholder="" value={password} onChange={(e) => setPassword(e.target.value)} />
+                                            <FormErrorMessage>Password cannot be less than 8 characters</FormErrorMessage>
+                                        </InputGroup>
+                                    </FormControl>
+                                </>
                             }
                             {showOTP && <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} />}
+                            {showRecoveryCode && <RecoveryCode value={recoveryCode} onChange={(val) => setRecoveryCode(val)} />}
                         </VStack>
 
                         <Box>
                             {showPassword ?
                                 <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
                                     <Link href="reset-password">Forgot Password?</Link>
+                                </Button>
+                                : (!showOTP || !showRecoveryCode) ? <br /> : ''
+                            }
+                            {showOTP ?
+                                <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
+                                    <a onClick={recoveryCodeEvent}>Use recovery code</a>
+                                </Button>
+                                : !showRecoveryCode ? <br /> : ''
+                            }
+                            {showRecoveryCode ?
+                                <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
+                                    <a onClick={twoFactAuthEvent}>Use Two Factor Authentication</a>
                                 </Button>
                                 : <br />
                             }

@@ -7,6 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import { ErrorCode } from '@/utils/ErrorCode';
 import User, { IUser } from '@/models/User';
 import { isPasswordValid } from '@/utils/hash';
+import otpGenerator from 'otp-generator';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,12 +55,14 @@ export async function POST(
     // This generates a secret 32 characters in length. Do not modify the number of
     // bytes without updating the sanity checks in the enable and login endpoints.
     const secret = authenticator.generateSecret(20);
+    const secretRecoveryCode = otpGenerator.generate(6, { specialChars: false });
 
     await User.updateOne(
         { email: session.user?.email },
         {
             twoFactorEnabled: false,
             twoFactorSecret: symmetricEncrypt(secret, process.env.ENCRYPTION_KEY),
+            recoveryCode: secretRecoveryCode,
         }
     );
 

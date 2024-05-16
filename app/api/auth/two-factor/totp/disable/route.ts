@@ -74,6 +74,7 @@ export async function POST(
         {
             twoFactorEnabled: false,
             twoFactorSecret: null,
+            recoveryCode: null,
         }
     );
 

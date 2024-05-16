@@ -1,9 +1,9 @@
 import { Flex, Input, Text } from '@chakra-ui/react';
 import useDigitInput from 'react-digit-input';
 
-export default function TwoFactAuth({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export default function RecoveryCode({ value, onChange }: { value: string; onChange: (value: string) => void }) {
     const digits = useDigitInput({
-        acceptedCharacters: /^[0-9]$/,
+        acceptedCharacters: /^[0-9-a-z-A-Z]$/,
         length: 6,
         value,
         onChange,
@@ -13,8 +13,8 @@ export default function TwoFactAuth({ value, onChange }: { value: string; onChan
 
     return (
         <>
-            <Text fontSize={'1rem'} textAlign={'center'} color={'black  '}>
-                Two Factor Authentication
+            <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
+                Recovery Code
             </Text>
             <Flex justifyContent={'center'} alignItems={'center'}>
                 <Input mr={2} className={className} name="2fa1" inputMode="decimal" {...digits[0]} autoFocus autoComplete="one-time-code" />
