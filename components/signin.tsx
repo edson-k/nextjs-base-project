@@ -1,7 +1,8 @@
 'use client';
 
 import { Box, Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, VStack, useToast } from '@chakra-ui/react';
-import { EmailIcon, LockIcon } from '@chakra-ui/icons'
+import { AiTwotoneMail } from "react-icons/ai";
+import { TbPasswordUser } from "react-icons/tb";
 import React, { Dispatch, SetStateAction, useRef, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -146,7 +147,7 @@ export default function SignIn(props: SignInProps) {
                                     </Text>
                                     <FormControl isRequired={true}>
                                         <InputGroup>
-                                            <InputLeftAddon><EmailIcon /></InputLeftAddon>
+                                            <InputLeftAddon><AiTwotoneMail /></InputLeftAddon>
                                             <Input type={'email'} placeholder={''} name="email" value={email} onChange={(e) => setEmail(e.target.value)} ref={inputRefEmail} />
                                             <FormErrorMessage>{email === '' ? 'Email is requi#319795' : 'Invalid email'}</FormErrorMessage>
                                         </InputGroup>
@@ -160,7 +161,7 @@ export default function SignIn(props: SignInProps) {
                                     </Text>
                                     <FormControl isRequired={true} mb={2}>
                                         <InputGroup>
-                                            <InputLeftAddon><LockIcon /></InputLeftAddon>
+                                            <InputLeftAddon><TbPasswordUser /></InputLeftAddon>
                                             <Input type={'password'} placeholder="" value={password} onChange={(e) => setPassword(e.target.value)} ref={inputRefPassword} />
                                             <FormErrorMessage>Password cannot be less than 8 characters</FormErrorMessage>
                                         </InputGroup>

@@ -1,7 +1,10 @@
 import { fetchSignUp } from '@/app/services/fetchClient';
 import { checkInput } from '@/utils/input';
-import { Button, Flex, FormControl, FormErrorMessage, Heading, Input, Text, VStack } from '@chakra-ui/react';
+import { Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, VStack } from '@chakra-ui/react';
 import { Dispatch, SetStateAction, useRef, useState } from 'react';
+import { RiInputField } from "react-icons/ri";
+import { AiTwotoneMail } from "react-icons/ai";
+import { TbPasswordUser } from "react-icons/tb";
 
 interface SignUpProps {
     isSignInMode: boolean;
@@ -75,14 +78,23 @@ export default function SignUn(props: SignUpProps) {
                     <form onSubmit={handleSignup} style={{ width: '75%' }}>
                         <VStack spacing={3}>
                             <FormControl isRequired={true}>
-                                <Input type={'text'} placeholder={'Name'} name="name" minLength={1} maxLength={50} value={name} onChange={(e) => setName(e.target.value)} ref={inputRefName} />
+                                <InputGroup>
+                                    <InputLeftAddon><RiInputField /></InputLeftAddon>
+                                    <Input type={'text'} placeholder={'Name'} name="name" minLength={1} maxLength={50} value={name} onChange={(e) => setName(e.target.value)} ref={inputRefName} />
+                                </InputGroup>
                             </FormControl>
                             <FormControl isRequired={true} isInvalid={isEmailInvalid}>
-                                <Input type={'email'} placeholder={'Email'} name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                <FormErrorMessage>A user already exist with the entered email</FormErrorMessage>
+                                <InputGroup>
+                                    <InputLeftAddon><AiTwotoneMail /></InputLeftAddon>
+                                    <Input type={'email'} placeholder={'Email'} name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    <FormErrorMessage>A user already exist with the entered email</FormErrorMessage>
+                                </InputGroup>
                             </FormControl>
                             <FormControl isRequired={true}>
-                                <Input type={'password'} placeholder={'Password'} name="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+                                <InputGroup>
+                                    <InputLeftAddon><TbPasswordUser /></InputLeftAddon>
+                                    <Input type={'password'} placeholder={'Password'} name="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+                                </InputGroup>
                             </FormControl>
                             <Flex justifyContent={'center'} w={'60%'}>
                                 <Button
