@@ -2,13 +2,14 @@
 
 import { Box, Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, VStack, useToast } from '@chakra-ui/react';
 import { EmailIcon, LockIcon } from '@chakra-ui/icons'
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { Dispatch, SetStateAction, useRef, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ErrorCode } from '@/utils/ErrorCode';
 import TwoFactAuth from '@/components/TwoFactAuth';
 import RecoveryCode from '@/components/RecoveryCode';
+import { checkInput } from '@/utils/input';
 
 interface SignInProps {
     isSignInMode: boolean;
@@ -27,6 +28,9 @@ export default function SignIn(props: SignInProps) {
     const toast = useToast();
     const router = useRouter();
 
+    const inputRefEmail: any = useRef(null);
+    const inputRefPassword: any = useRef(null);
+
     function recoveryCodeEvent(event: any) {
         event.preventDefault();
         // perform some action here
@@ -41,6 +45,11 @@ export default function SignIn(props: SignInProps) {
         setRecoveryCode('');
         setShowRecoveryCode(false);
         setShowOTP(true);
+    }
+
+    function signInEvent() {
+        props.setSignInMode(true);
+        checkInput(inputRefEmail);
     }
 
     const handleSignIn = async (e: React.SyntheticEvent) => {
@@ -111,6 +120,7 @@ export default function SignIn(props: SignInProps) {
         } else {
             setShowEmail(false);
             setShowPassword(true);
+            checkInput(inputRefPassword);
         }
     };
     return (
@@ -124,13 +134,13 @@ export default function SignIn(props: SignInProps) {
                         <VStack spacing={5} w={'100%'}>
                             {showEmail &&
                                 <>
-                                    <Text fontSize={'1rem'} textAlign={'center'} color={'black  '}>
+                                    <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
                                         E-Mail
                                     </Text>
                                     <FormControl isRequired={true}>
                                         <InputGroup>
                                             <InputLeftAddon><EmailIcon /></InputLeftAddon>
-                                            <Input type={'email'} placeholder={''} name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                            <Input type={'email'} placeholder={''} name="email" value={email} onChange={(e) => setEmail(e.target.value)} ref={inputRefEmail} />
                                             <FormErrorMessage>{email === '' ? 'Email is requi#319795' : 'Invalid email'}</FormErrorMessage>
                                         </InputGroup>
                                     </FormControl>
@@ -138,13 +148,13 @@ export default function SignIn(props: SignInProps) {
                             }
                             {showPassword &&
                                 <>
-                                    <Text fontSize={'1rem'} textAlign={'center'} color={'black  '}>
+                                    <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
                                         Password
                                     </Text>
                                     <FormControl isRequired={true} mb={2}>
                                         <InputGroup>
                                             <InputLeftAddon><LockIcon /></InputLeftAddon>
-                                            <Input type={'password'} placeholder="" value={password} onChange={(e) => setPassword(e.target.value)} />
+                                            <Input type={'password'} placeholder="" value={password} onChange={(e) => setPassword(e.target.value)} ref={inputRefPassword} />
                                             <FormErrorMessage>Password cannot be less than 8 characters</FormErrorMessage>
                                         </InputGroup>
                                     </FormControl>
@@ -207,7 +217,7 @@ export default function SignIn(props: SignInProps) {
                         bgColor={'transparent'}
                         color={'white'}
                         w={'50%'}
-                        onClick={() => props.setSignInMode(true)}
+                        onClick={() => signInEvent()}
                         _hover={{ bgColor: '#fff', color: '#319795' }}
                     >
                         SIGN IN

@@ -1,6 +1,7 @@
 import { fetchSignUp } from '@/app/services/fetchClient';
+import { checkInput } from '@/utils/input';
 import { Button, Flex, FormControl, FormErrorMessage, Heading, Input, Text, VStack } from '@chakra-ui/react';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useRef, useState } from 'react';
 
 interface SignUpProps {
     isSignInMode: boolean;
@@ -14,6 +15,9 @@ export default function SignUn(props: SignUpProps) {
 
     // Validate inputs
     const validateInputs = () => setEmailInvalid(true);
+
+    const inputRefName: any = useRef(null);
+    checkInput(inputRefName);
 
     const handleSignup = async (e: React.SyntheticEvent) => {
         e.preventDefault();
@@ -63,7 +67,7 @@ export default function SignUn(props: SignUpProps) {
                     <form onSubmit={handleSignup} style={{ width: '75%' }}>
                         <VStack spacing={3}>
                             <FormControl isRequired={true}>
-                                <Input type={'text'} placeholder={'Name'} name="name" minLength={1} maxLength={50} value={name} onChange={(e) => setName(e.target.value)} />
+                                <Input type={'text'} placeholder={'Name'} name="name" minLength={1} maxLength={50} value={name} onChange={(e) => setName(e.target.value)} ref={inputRefName} />
                             </FormControl>
                             <FormControl isRequired={true} isInvalid={isEmailInvalid}>
                                 <Input type={'email'} placeholder={'Email'} name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
