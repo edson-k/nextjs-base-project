@@ -19,6 +19,14 @@ export default function SignUn(props: SignUpProps) {
     const inputRefName: any = useRef(null);
     checkInput(inputRefName);
 
+    const signUpEvent = () => {
+        props.setSignInMode(false)
+        setEmailInvalid(false);
+        setName('');
+        setEmail('');
+        setPassword('');
+    }
+
     const handleSignup = async (e: React.SyntheticEvent) => {
         e.preventDefault();
 
@@ -55,7 +63,7 @@ export default function SignUn(props: SignUpProps) {
                         bgColor={'transparent'}
                         color={'white'}
                         w={'50%'}
-                        onClick={() => props.setSignInMode(false)}
+                        onClick={() => signUpEvent()}
                         _hover={{ bgColor: '#fff', color: '#319795' }}
                     >
                         SIGN UP

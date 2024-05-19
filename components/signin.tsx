@@ -10,6 +10,7 @@ import { ErrorCode } from '@/utils/ErrorCode';
 import TwoFactAuth from '@/components/TwoFactAuth';
 import RecoveryCode from '@/components/RecoveryCode';
 import { checkInput } from '@/utils/input';
+import { set } from 'mongoose';
 
 interface SignInProps {
     isSignInMode: boolean;
@@ -31,24 +32,30 @@ export default function SignIn(props: SignInProps) {
     const inputRefEmail: any = useRef(null);
     const inputRefPassword: any = useRef(null);
 
-    function recoveryCodeEvent(event: any) {
+    const recoveryCodeEvent = (event: any) => {
         event.preventDefault();
-        // perform some action here
         setRecoveryCode('');
         setShowOTP(false);
         setShowRecoveryCode(true);
     }
 
-    function twoFactAuthEvent(event: any) {
+    const twoFactAuthEvent = (event: any) => {
         event.preventDefault();
-        // perform some action here
         setRecoveryCode('');
         setShowRecoveryCode(false);
         setShowOTP(true);
     }
 
-    function signInEvent() {
+    const signInEvent = () => {
         props.setSignInMode(true);
+        setShowEmail(true);
+        setEmail('');
+        setShowPassword(false);
+        setPassword('');
+        setShowOTP(false);
+        setTotpCode('');
+        setShowRecoveryCode(false);
+        setRecoveryCode('');
         checkInput(inputRefEmail);
     }
 
