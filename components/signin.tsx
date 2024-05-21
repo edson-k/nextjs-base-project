@@ -32,6 +32,8 @@ export default function SignIn(props: SignInProps) {
 
     const inputRefEmail: any = useRef(null);
     const inputRefPassword: any = useRef(null);
+    const inputRefTotpCode: any = useRef(null);
+    const inputRefRecoveryCode: any = useRef(null);
 
     const recoveryCodeEvent = (event: any) => {
         event.preventDefault();
@@ -87,12 +89,21 @@ export default function SignIn(props: SignInProps) {
                                 status: 'error',
                             });
                             return;
+                        case ErrorCode.IncorrectTwoFactorCode:
+                            setTotpCode('');
+                            toast({
+                                title: 'Invalid credentials',
+                                status: 'error',
+                            });
+                            InputUtil.focus(inputRefTotpCode);
+                            return;
                         case ErrorCode.IncorrectRecoveryCode:
                             setRecoveryCode('');
                             toast({
                                 title: 'Invalid credentials',
                                 status: 'error',
                             });
+                            InputUtil.focus(inputRefRecoveryCode);
                             return;
                         case ErrorCode.SecondFactorRequest:
                             setShowEmail(false);
@@ -103,6 +114,7 @@ export default function SignIn(props: SignInProps) {
                             setShowPassword(false);
                             setShowRecoveryCode(false);
                             setShowOTP(true);
+                            InputUtil.focus(inputRefTotpCode);
                             toast({
                                 title: 'Two Factor Authentication Required',
                                 status: 'warning',
@@ -112,6 +124,7 @@ export default function SignIn(props: SignInProps) {
                             setShowPassword(false);
                             setShowOTP(false);
                             setShowRecoveryCode(true);
+                            InputUtil.focus(inputRefRecoveryCode);
                             toast({
                                 title: 'Recovery Code Required',
                                 status: 'warning',
@@ -120,6 +133,7 @@ export default function SignIn(props: SignInProps) {
                     }
                 })
                 .catch(() => {
+                    signInEvent();
                     toast({
                         title: 'Sorry something went wrong',
                         status: 'error',
@@ -168,8 +182,8 @@ export default function SignIn(props: SignInProps) {
                                     </FormControl>
                                 </>
                             }
-                            {showOTP && <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} />}
-                            {showRecoveryCode && <RecoveryCode value={recoveryCode} onChange={(val) => setRecoveryCode(val)} />}
+                            {showOTP && <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} refFocus={inputRefTotpCode} />}
+                            {showRecoveryCode && <RecoveryCode value={recoveryCode} onChange={(val) => setRecoveryCode(val)} refFocus={inputRefRecoveryCode} />}
                         </VStack>
 
                         <Box>
@@ -177,21 +191,22 @@ export default function SignIn(props: SignInProps) {
                                 <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
                                     <Link href="reset-password">Forgot Password?</Link>
                                 </Button>
-                                : (!showOTP || !showRecoveryCode) ? <br /> : ''
+                                : ''
                             }
                             {showOTP ?
                                 <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
                                     <a onClick={recoveryCodeEvent}>Use recovery code</a>
                                 </Button>
-                                : !showRecoveryCode ? <br /> : ''
+                                : ''
                             }
                             {showRecoveryCode ?
                                 <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
                                     <a onClick={twoFactAuthEvent}>Use Two Factor Authentication</a>
                                 </Button>
-                                : <br />
+                                : ''
                             }
                         </Box>
+                        <br />
                         <Flex justifyContent={'center'}>
                             <Button
                                 type="submit"
@@ -209,6 +224,29 @@ export default function SignIn(props: SignInProps) {
                                 SIGN IN
                             </Button>
                         </Flex>
+                        {
+                            !showEmail ?
+                                <Flex justifyContent={'center'} marginTop={'10px'}>
+                                    <Button
+                                        type="button"
+                                        borderRadius={'full'}
+                                        bgColor={'transparent'}
+                                        border={'2px solid #999'}
+                                        color={'#999'}
+                                        fontFamily={'monospace'}
+                                        _hover={{
+                                            bgColor: '#999',
+                                            color: '#FFF',
+                                            border: '2px solid #999',
+                                        }}
+                                        onClick={() => signInEvent()}
+                                        w={'60%'}
+                                    >
+                                        CANCEL
+                                    </Button>
+                                </Flex>
+                                : ''
+                        }
                     </form>
                 </VStack>
             ) : (
