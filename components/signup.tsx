@@ -1,5 +1,5 @@
 import { fetchSignUp } from '@/app/services/fetchClient';
-import { checkInput } from '@/utils/input';
+import InputUtil from '@/utils/input';
 import { Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, VStack } from '@chakra-ui/react';
 import { Dispatch, SetStateAction, useRef, useState } from 'react';
 import { RiInputField } from "react-icons/ri";
@@ -20,7 +20,7 @@ export default function SignUn(props: SignUpProps) {
     const validateInputs = () => setEmailInvalid(true);
 
     const inputRefName: any = useRef(null);
-    checkInput(inputRefName);
+    InputUtil.focus(inputRefName);
 
     const signUpEvent = () => {
         props.setSignInMode(false)

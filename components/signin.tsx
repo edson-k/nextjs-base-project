@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { ErrorCode } from '@/utils/ErrorCode';
 import TwoFactAuth from '@/components/TwoFactAuth';
 import RecoveryCode from '@/components/RecoveryCode';
-import { checkInput } from '@/utils/input';
+import InputUtil from '@/utils/input';
 import { set } from 'mongoose';
 
 interface SignInProps {
@@ -57,7 +57,7 @@ export default function SignIn(props: SignInProps) {
         setTotpCode('');
         setShowRecoveryCode(false);
         setRecoveryCode('');
-        checkInput(inputRefEmail);
+        InputUtil.focus(inputRefEmail);
     }
 
     const handleSignIn = async (e: React.SyntheticEvent) => {
@@ -128,7 +128,7 @@ export default function SignIn(props: SignInProps) {
         } else {
             setShowEmail(false);
             setShowPassword(true);
-            checkInput(inputRefPassword);
+            InputUtil.focus(inputRefPassword);
         }
     };
     return (
