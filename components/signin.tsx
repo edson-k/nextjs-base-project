@@ -171,6 +171,9 @@ export default function SignIn(props: SignInProps) {
                             {showPassword &&
                                 <>
                                     <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
+                                        <b>{email}</b>
+                                    </Text>
+                                    <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
                                         Password
                                     </Text>
                                     <FormControl isRequired={true} mb={2}>
