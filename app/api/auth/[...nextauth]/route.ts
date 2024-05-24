@@ -6,7 +6,7 @@ import { symmetricDecrypt } from '@/utils/crypto';
 import db from '@/utils/db';
 import { ErrorCode } from '@/utils/ErrorCode';
 import { isPasswordValid } from '@/utils/hash';
-import { validatetHuman } from '@/utils/recaptcha';
+import { validatedHuman } from '@/utils/recaptcha';
 
 export const authOptions: any = {
     pages: {
@@ -29,7 +29,7 @@ export const authOptions: any = {
             async authorize(credentials: any) {
 
                 // Validate human
-                const human = await validatetHuman(credentials.token);
+                const human = await validatedHuman(credentials.token);
                 if (!human) {
                     throw new Error(ErrorCode.IsBot);
                 }

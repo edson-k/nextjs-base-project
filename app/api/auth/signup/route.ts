@@ -3,7 +3,7 @@ import User from '@/models/User';
 import db from '@/utils/db';
 import { hashPassword } from '@/utils/hash';
 import { ErrorCode } from "@/utils/ErrorCode";
-import { validatetHuman } from "@/utils/recaptcha";
+import { validatedHuman } from "@/utils/recaptcha";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,7 @@ export async function POST(
     const newUser = await req.json();
 
     // Validate human
-    const human = await validatetHuman(newUser.token);
+    const human = await validatedHuman(newUser.token);
     if (!human) {
         return NextResponse.json({ success: false, message: 'You are not human!', error: ErrorCode.IsBot }, { status: 422 });
     }
