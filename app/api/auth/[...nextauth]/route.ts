@@ -21,8 +21,6 @@ export const authOptions: any = {
                 password: { label: 'Password', type: 'password', placeholder: 'Your super secure password' },
                 totpCode: { label: 'Two-factor Code', type: 'input', placeholder: 'Code from authenticator app' },
                 recoveryCode: { label: 'Recovery Code', type: 'input', placeholder: 'Code from recovery authenticator app' },
-                // showOTP: { label: 'Two-factor Code', type: 'input', placeholder: 'Flag from authenticator app' },
-                // showRecoveryCode: { label: 'Recovery Code', type: 'input', placeholder: 'Flag from recovery authenticator app' },
                 step: { label: 'Step', type: 'input', placeholder: 'Step from authenticator app' },
                 token: { label: 'Token', type: 'input', placeholder: 'Token from reCAPTCHA' }
             },
