@@ -15,4 +15,5 @@ export enum ErrorCode {
   NewPasswordMatchesOld = 'new-password-matches-old',
   ThirdPartyIdentityProviderEnabled = 'third-party-identity-provider-enabled',
   CredentialsSignin = 'CredentialsSignin',
+  IsBot = 'is-bot',
 }

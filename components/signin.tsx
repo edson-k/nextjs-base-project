@@ -11,7 +11,7 @@ import { ErrorCode } from '@/utils/ErrorCode';
 import TwoFactAuth from '@/components/TwoFactAuth';
 import RecoveryCode from '@/components/RecoveryCode';
 import InputUtil from '@/utils/input';
-import { set } from 'mongoose';
+import ReCAPTCHA from "react-google-recaptcha";
 
 interface SignInProps {
     isSignInMode: boolean;
@@ -29,6 +29,7 @@ export default function SignIn(props: SignInProps) {
     const [showEmail, setShowEmail] = useState<boolean>(true);
     const toast = useToast();
     const router = useRouter();
+    const reRef: any = useRef<ReCAPTCHA>();
 
     const inputRefEmail: any = useRef(null);
     const inputRefPassword: any = useRef(null);
@@ -65,6 +66,8 @@ export default function SignIn(props: SignInProps) {
     const handleSignIn = async (e: React.SyntheticEvent) => {
         e.preventDefault();
 
+        const token = await reRef?.current?.executeAsync();
+
         if (password) {
             await signIn('credentials', {
                 redirect: false,
@@ -74,6 +77,7 @@ export default function SignIn(props: SignInProps) {
                 recoveryCode,
                 showOTP,
                 showRecoveryCode,
+                token,
             })
                 .then((response) => {
                     if (response?.ok) {
@@ -82,6 +86,12 @@ export default function SignIn(props: SignInProps) {
                     }
 
                     switch (response?.error) {
+                        case ErrorCode.IsBot:
+                            toast({
+                                title: 'You are not human!',
+                                status: 'error',
+                            });
+                            return;
                         case ErrorCode.IncorrectPassword:
                         case ErrorCode.CredentialsSignin:
                             toast({
@@ -209,6 +219,7 @@ export default function SignIn(props: SignInProps) {
                                 : ''
                             }
                         </Box>
+                        <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''} size='invisible' ref={reRef} />
                         <br />
                         <Flex justifyContent={'center'}>
                             <Button

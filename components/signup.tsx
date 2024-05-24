@@ -1,10 +1,11 @@
 import { fetchSignUp } from '@/app/services/fetchClient';
 import InputUtil from '@/utils/input';
-import { Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, VStack } from '@chakra-ui/react';
+import { Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, useToast, VStack } from '@chakra-ui/react';
 import { Dispatch, SetStateAction, useRef, useState } from 'react';
 import { RiInputField } from "react-icons/ri";
 import { AiTwotoneMail } from "react-icons/ai";
 import { TbPasswordUser } from "react-icons/tb";
+import ReCAPTCHA from "react-google-recaptcha";
 
 interface SignUpProps {
     isSignInMode: boolean;
@@ -15,12 +16,18 @@ export default function SignUn(props: SignUpProps) {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [isEmailInvalid, setEmailInvalid] = useState<boolean>(false);
+    const reRef: any = useRef<ReCAPTCHA>();
+    const [load, setLoad] = useState<boolean>(false);
+    const toast = useToast();
 
     // Validate inputs
     const validateInputs = () => setEmailInvalid(true);
 
     const inputRefName: any = useRef(null);
-    InputUtil.focus(inputRefName);
+    if (!load) {
+        InputUtil.focus(inputRefName);
+        setLoad(true);
+    }
 
     const signUpEvent = () => {
         props.setSignInMode(false)
@@ -33,21 +40,35 @@ export default function SignUn(props: SignUpProps) {
     const handleSignup = async (e: React.SyntheticEvent) => {
         e.preventDefault();
 
+        const token = await reRef?.current?.executeAsync();
+
         const newUser = {
             name,
             email,
             password,
+            token,
         };
 
         const data = await fetchSignUp(newUser);
         if (data.userExists) {
             validateInputs();
         } else {
-            setEmailInvalid(false);
-            setName('');
-            setEmail('');
-            setPassword('');
-            props.setSignInMode(true);
+            if (data.error) {
+                toast({
+                    title: data.message,
+                    status: 'error',
+                });
+            } else {
+                toast({
+                    title: data.message,
+                    status: 'success',
+                });
+                setEmailInvalid(false);
+                setName('');
+                setEmail('');
+                setPassword('');
+                props.setSignInMode(true);
+            }
         }
     };
     return (
@@ -96,6 +117,7 @@ export default function SignUn(props: SignUpProps) {
                                     <Input type={'password'} placeholder={'Password'} name="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
                                 </InputGroup>
                             </FormControl>
+                            <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''} size='invisible' ref={reRef} />
                             <Flex justifyContent={'center'} w={'60%'}>
                                 <Button
                                     type="submit"

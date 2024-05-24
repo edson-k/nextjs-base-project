@@ -6,6 +6,7 @@ import { symmetricDecrypt } from '@/utils/crypto';
 import db from '@/utils/db';
 import { ErrorCode } from '@/utils/ErrorCode';
 import { isPasswordValid } from '@/utils/hash';
+import { validatetHuman } from '@/utils/recaptcha';
 
 export const authOptions: any = {
     pages: {
@@ -22,9 +23,17 @@ export const authOptions: any = {
                 recoveryCode: { label: 'Recovery Code', type: 'input', placeholder: 'Code from recovery authenticator app' },
                 showOTP: { label: 'Two-factor Code', type: 'input', placeholder: 'Flag from authenticator app' },
                 showRecoveryCode: { label: 'Recovery Code', type: 'input', placeholder: 'Flag from recovery authenticator app' },
+                token: { label: 'Token', type: 'input', placeholder: 'Token from reCAPTCHA' }
             },
             //@ts-ignore
             async authorize(credentials: any) {
+
+                // Validate human
+                const human = await validatetHuman(credentials.token);
+                if (!human) {
+                    throw new Error(ErrorCode.IsBot);
+                }
+
                 await db.connect();
 
                 const user = await User.findOne<IUser>({ email: credentials.email });

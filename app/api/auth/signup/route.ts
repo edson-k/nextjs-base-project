@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import User from '@/models/User';
 import db from '@/utils/db';
 import { hashPassword } from '@/utils/hash';
+import { ErrorCode } from "@/utils/ErrorCode";
+import { validatetHuman } from "@/utils/recaptcha";
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +12,12 @@ export async function POST(
     { params }: { params: {} }) {
 
     const newUser = await req.json();
+
+    // Validate human
+    const human = await validatetHuman(newUser.token);
+    if (!human) {
+        return NextResponse.json({ success: false, message: 'You are not human!', error: ErrorCode.IsBot }, { status: 422 });
+    }
 
     await db.connect();
 
