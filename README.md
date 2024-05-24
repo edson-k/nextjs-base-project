@@ -5,6 +5,9 @@ Example showing a custom sign-in page using NextAuth.js with Two Factor Authenti
 ## 📦 Technologies
 ![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fedson-k%2Fnextjs-base-project%2Fmain%2Fpackage.json&query=%24.dependencies.next&label=NextJS)
 ![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fedson-k%2Fnextjs-base-project%2Fmain%2Fpackage.json&query=%24.dependencies%5B'next-auth'%5D&label=Next-Auth)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fedson-k%2Fnextjs-base-project%2Fmain%2Fpackage.json&query=%24.dependencies%5B'react'%5D&label=ReactJS)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fedson-k%2Fnextjs-base-project%2Fmain%2Fpackage.json&query=%24.dependencies%5B'%40chakra-ui%2Freact'%5D&label=%40chakra-ui%2Freact)
+
 
 
 
