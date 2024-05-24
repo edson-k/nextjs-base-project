@@ -21,8 +21,9 @@ export const authOptions: any = {
                 password: { label: 'Password', type: 'password', placeholder: 'Your super secure password' },
                 totpCode: { label: 'Two-factor Code', type: 'input', placeholder: 'Code from authenticator app' },
                 recoveryCode: { label: 'Recovery Code', type: 'input', placeholder: 'Code from recovery authenticator app' },
-                showOTP: { label: 'Two-factor Code', type: 'input', placeholder: 'Flag from authenticator app' },
-                showRecoveryCode: { label: 'Recovery Code', type: 'input', placeholder: 'Flag from recovery authenticator app' },
+                // showOTP: { label: 'Two-factor Code', type: 'input', placeholder: 'Flag from authenticator app' },
+                // showRecoveryCode: { label: 'Recovery Code', type: 'input', placeholder: 'Flag from recovery authenticator app' },
+                step: { label: 'Step', type: 'input', placeholder: 'Step from authenticator app' },
                 token: { label: 'Token', type: 'input', placeholder: 'Token from reCAPTCHA' }
             },
             //@ts-ignore
@@ -51,13 +52,12 @@ export const authOptions: any = {
                 }
 
                 if (user.twoFactorEnabled) {
-                    if (credentials.showOTP === 'false' && credentials.showRecoveryCode === 'false') {
+                    if (credentials.step === 'password') {
                         throw new Error(ErrorCode.SecondFactorRequest);
-                    } else if (credentials.showOTP === 'true') {
+                    } else if (credentials.step === 'otp') {
                         if (!credentials.totpCode) {
                             throw new Error(ErrorCode.SecondFactorRequired);
                         }
-
                         if (!user.twoFactorSecret) {
                             console.error(`Two factor is enabled for user ${user.email} but they have no secret`);
                             throw new Error(ErrorCode.InternalServerError);
@@ -82,7 +82,7 @@ export const authOptions: any = {
                                 throw new Error(ErrorCode.IncorrectTwoFactorCode);
                             }
                         }
-                    } else if (credentials.showRecoveryCode === 'true') {
+                    } else if (credentials.step === 'recoveryCode') {
                         if (!credentials.recoveryCode) {
                             throw new Error(ErrorCode.RecoveryCodeRequired);
                         } else if (user.recoveryCode === credentials.recoveryCode) {
@@ -99,7 +99,9 @@ export const authOptions: any = {
                             throw new Error(ErrorCode.IncorrectRecoveryCode);
                         }
                     }
+                    console.log('aqui 7');
                 }
+                console.log('aqui 8');
 
                 if (user)
                     return {

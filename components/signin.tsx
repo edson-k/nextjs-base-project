@@ -27,6 +27,7 @@ export default function SignIn(props: SignInProps) {
     const [showRecoveryCode, setShowRecoveryCode] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [showEmail, setShowEmail] = useState<boolean>(true);
+    const [step, setStep] = useState<string>('email');
     const toast = useToast();
     const router = useRouter();
     const reRef: any = useRef<ReCAPTCHA>();
@@ -41,6 +42,7 @@ export default function SignIn(props: SignInProps) {
         setRecoveryCode('');
         setShowOTP(false);
         setShowRecoveryCode(true);
+        setStep('recoveryCode');
     }
 
     const twoFactAuthEvent = (event: any) => {
@@ -48,6 +50,7 @@ export default function SignIn(props: SignInProps) {
         setRecoveryCode('');
         setShowRecoveryCode(false);
         setShowOTP(true);
+        setStep('otp');
     }
 
     const signInEvent = () => {
@@ -61,6 +64,7 @@ export default function SignIn(props: SignInProps) {
         setShowRecoveryCode(false);
         setRecoveryCode('');
         InputUtil.focus(inputRefEmail);
+        setStep('email');
     }
 
     const handleSignIn = async (e: React.SyntheticEvent) => {
@@ -75,8 +79,7 @@ export default function SignIn(props: SignInProps) {
                 password,
                 totpCode,
                 recoveryCode,
-                showOTP,
-                showRecoveryCode,
+                step,
                 token,
             })
                 .then((response) => {
@@ -98,11 +101,12 @@ export default function SignIn(props: SignInProps) {
                                 title: 'Invalid credentials',
                                 status: 'error',
                             });
+                            setStep('password');
                             return;
                         case ErrorCode.IncorrectTwoFactorCode:
                             setTotpCode('');
                             toast({
-                                title: 'Invalid credentials',
+                                title: 'Invalid Two Factor Code',
                                 status: 'error',
                             });
                             InputUtil.focus(inputRefTotpCode);
@@ -110,7 +114,7 @@ export default function SignIn(props: SignInProps) {
                         case ErrorCode.IncorrectRecoveryCode:
                             setRecoveryCode('');
                             toast({
-                                title: 'Invalid credentials',
+                                title: 'Invalid Recovery Code',
                                 status: 'error',
                             });
                             InputUtil.focus(inputRefRecoveryCode);
@@ -119,11 +123,13 @@ export default function SignIn(props: SignInProps) {
                             setShowEmail(false);
                             setShowPassword(false);
                             setShowOTP(true);
+                            setStep('otp');
                             return;
                         case ErrorCode.SecondFactorRequired:
                             setShowPassword(false);
                             setShowRecoveryCode(false);
                             setShowOTP(true);
+                            setStep('otp');
                             InputUtil.focus(inputRefTotpCode);
                             toast({
                                 title: 'Two Factor Authentication Required',
@@ -134,6 +140,7 @@ export default function SignIn(props: SignInProps) {
                             setShowPassword(false);
                             setShowOTP(false);
                             setShowRecoveryCode(true);
+                            setStep('recoveryCode');
                             InputUtil.focus(inputRefRecoveryCode);
                             toast({
                                 title: 'Recovery Code Required',
@@ -153,6 +160,7 @@ export default function SignIn(props: SignInProps) {
             setShowEmail(false);
             setShowPassword(true);
             InputUtil.focus(inputRefPassword);
+            setStep('password');
         }
     };
     return (
