@@ -24,6 +24,12 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [step, setStep] = useState(SetupStep.ConfirmPassword);
 
+    function close() {
+        onClose();
+        setPassword('');
+        setStep(SetupStep.ConfirmPassword);
+    }
+
     async function handleSetup() {
         if (isSubmitting) {
             return;
@@ -100,7 +106,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
     }
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
+        <Modal isOpen={isOpen} onClose={close}>
             <ModalOverlay />
             <ModalContent>
                 <WithStep step={SetupStep.ConfirmPassword} current={step}>
@@ -110,7 +116,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
                             <Input type={'password'} placeholder="*******" size="md" value={password} onChange={(event: any) => setPassword(event.target.value)} />
                         </ModalBody>
                         <ModalFooter>
-                            <Button mr={3} onClick={onClose}>
+                            <Button mr={3} onClick={close}>
                                 Close
                             </Button>
                             <Button colorScheme={'teal'} onClick={handleSetup}>
@@ -124,7 +130,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
                         <ModalHeader>Enable two-factor authentication</ModalHeader>
                         <ModalBody>
                             <Text marginBottom={'2em'}>Scan the image below with the authenticator app on your phone or manually enter the text code instead.</Text>
-                            <img src={dataUri} />
+                            <img src={dataUri} style={{ margin: '0 auto' }} />
                         </ModalBody>
                         <ModalFooter>
                             <Button mr={3} onClick={onClose}>
@@ -141,7 +147,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
                         <ModalHeader>Enable two-factor authentication</ModalHeader>
                         <ModalBody>
                             <Text mb={2}>Enter your code to enable 2FA</Text>
-                            <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} />
+                            <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} refFocus='' />
                         </ModalBody>
                         <ModalFooter>
                             <Button mr={3} onClick={onClose}>
@@ -212,7 +218,7 @@ const DisableTwoFactSetupModal = ({ isOpen, onClose, onDisable }: { isOpen: bool
                 <ModalHeader>Disable two-factor authentication</ModalHeader>
                 <ModalBody>
                     <Text mb={2}>Enter your code to disable 2FA</Text>
-                    <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} />
+                    <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} refFocus='' />
                 </ModalBody>
                 <ModalFooter>
                     <Button mr={3} onClick={onClose}>
