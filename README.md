@@ -46,6 +46,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You will find more examples under https://next-auth.js.org/.
 
+## reCAPTCHA
+Create your reCAPTCHA key at http://www.google.com/recaptcha/admin
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
