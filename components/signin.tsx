@@ -219,7 +219,7 @@ export default function SignIn(props: SignInProps) {
                                 : ''
                             }
                         </Box>
-                        <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''} size='invisible' ref={reRef} />
+                        {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''} size='invisible' ref={reRef} /> : ''}
                         <br />
                         <Flex justifyContent={'center'}>
                             <Button

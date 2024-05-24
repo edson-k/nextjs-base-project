@@ -118,7 +118,7 @@ export default function SignUn(props: SignUpProps) {
                                     <Input type={'password'} placeholder={'Password'} name="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
                                 </InputGroup>
                             </FormControl>
-                            <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''} size='invisible' ref={reRef} />
+                            {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''} size='invisible' ref={reRef} /> : ''}
                             <Flex justifyContent={'center'} w={'60%'}>
                                 <Button
                                     type="submit"
