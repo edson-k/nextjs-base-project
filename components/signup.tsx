@@ -35,6 +35,7 @@ export default function SignUn(props: SignUpProps) {
         setName('');
         setEmail('');
         setPassword('');
+        setLoad(false);
     }
 
     const handleSignup = async (e: React.SyntheticEvent) => {
