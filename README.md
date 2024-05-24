@@ -1,12 +1,18 @@
-# ![alt text](https://github.githubassets.com/images/icons/emoji/unicode/1f510.png) next-auth-2fa-example
+# ![alt text](https://github.githubassets.com/images/icons/emoji/unicode/1f510.png) nextjs-base-project
 
 Example showing a custom sign-in page using NextAuth.js with Two Factor Authentication using [TOTP algorithm](https://en.wikipedia.org/wiki/Time-based_one-time_password).
 
-## Features
+## 📦 Technologies
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fedson-k%2Fnextjs-base-project%2Fmain%2Fpackage.json&query=%24.dependencies.next&label=NextJS)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fedson-k%2Fnextjs-base-project%2Fmain%2Fpackage.json&query=%24.dependencies%5B'next-auth'%5D&label=Next-Auth)
 
+
+
+## Features
 - Users can manage 2FA
 - Enforce 2FA during login
 - First class integration with NextAuth.js
+- reCAPTCHA
 
 ![Screenshot 1](./media/screenshot1.png)
 ![Screenshot 2](./media/screenshot2.png)
