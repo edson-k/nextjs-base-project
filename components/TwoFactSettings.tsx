@@ -266,7 +266,7 @@ export default function TwoFactSettings({ user }: { user: IUser }) {
                 {isEnabled ?
                     <Box display="flex" alignItems="center" justifyContent="center">
                         <InputGroup>
-                            <InputLeftAddon><LockIcon />&nbsp;Recovery Code</InputLeftAddon>
+                            <InputLeftAddon><LockIcon />&nbsp;2FA Recovery Code</InputLeftAddon>
                             <Input type={'text'} placeholder={''} name="recoveryCode" value={recoveryCode} readOnly />
                         </InputGroup>
                     </Box> : ''}
