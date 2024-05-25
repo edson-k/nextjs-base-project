@@ -7,6 +7,7 @@ export interface IUser extends Document {
     twoFactorEnabled: boolean;
     twoFactorSecret?: string;
     recoveryCode?: string;
+    active?: boolean;
     toJSON(): any;
 }
 
@@ -18,6 +19,7 @@ const userSchema = new mongoose.Schema<IUser>(
         twoFactorEnabled: { type: Boolean, required: false, default: false },
         twoFactorSecret: { type: String, required: false },
         recoveryCode: { type: String, required: false },
+        active: { type: Boolean, required: false, default: false },
     },
     {
         toObject: {

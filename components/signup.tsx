@@ -16,8 +16,10 @@ export default function SignUn(props: SignUpProps) {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [isEmailInvalid, setEmailInvalid] = useState<boolean>(false);
-    const reRef: any = useRef<ReCAPTCHA>();
     const [load, setLoad] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isDisabled, setIsDisabled] = useState<boolean>(false);
+    const reRef: any = useRef<ReCAPTCHA>();
     const toast = useToast();
 
     // Validate inputs
@@ -40,6 +42,9 @@ export default function SignUn(props: SignUpProps) {
 
     const handleSignup = async (e: React.SyntheticEvent) => {
         e.preventDefault();
+
+        setIsLoading(true);
+        setIsDisabled(true);
 
         const token = await reRef?.current?.executeAsync();
 
@@ -71,6 +76,9 @@ export default function SignUn(props: SignUpProps) {
                 props.setSignInMode(true);
             }
         }
+
+        setIsLoading(false);
+        setIsDisabled(false);
     };
     return (
         <Flex h={'88%'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} px={5}>
@@ -109,8 +117,8 @@ export default function SignUn(props: SignUpProps) {
                                 <InputGroup>
                                     <InputLeftAddon><AiTwotoneMail /></InputLeftAddon>
                                     <Input type={'email'} placeholder={'Email'} name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                    <FormErrorMessage>A user already exist with the entered email</FormErrorMessage>
                                 </InputGroup>
+                                <FormErrorMessage>A user already exist with the entered email</FormErrorMessage>
                             </FormControl>
                             <FormControl isRequired={true}>
                                 <InputGroup>
@@ -132,6 +140,8 @@ export default function SignUn(props: SignUpProps) {
                                         color: '#319795',
                                         border: '2px solid #319795',
                                     }}
+                                    isLoading={isLoading}
+                                    isDisabled={isDisabled}
                                 >
                                     SIGN UP
                                 </Button>

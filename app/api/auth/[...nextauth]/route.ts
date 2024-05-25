@@ -49,10 +49,14 @@ export const authOptions: any = {
                     return null;
                 }
 
+                if (!user.active) {
+                    throw new Error(ErrorCode.UserNotActive);
+                }
+
                 if (user.twoFactorEnabled) {
                     if (credentials.step === 'password') {
                         throw new Error(ErrorCode.SecondFactorRequest);
-                    } else if (credentials.step === 'otp') {
+                    } else if (credentials.step === '2fa') {
                         if (!credentials.totpCode) {
                             throw new Error(ErrorCode.SecondFactorRequired);
                         }

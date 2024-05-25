@@ -11,8 +11,9 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'
+import React, { useState } from 'react';
+import { fetchResetPassword } from '@/app/services/fetchClient';
 
 interface Props {
     params: {
@@ -37,14 +38,7 @@ export default function ResetPassword({ params: { token } }: Props) {
             password,
         };
 
-        await fetch('/api/reset-password', {
-            method: 'PUT',
-            body: JSON.stringify(newPassword),
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-            },
-        })
+        await fetchResetPassword(newPassword, 'PUT')
             .then(async (res) => {
                 const data = await res.json();
                 if (res.status === 200) {

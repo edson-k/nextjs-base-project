@@ -16,4 +16,5 @@ export enum ErrorCode {
   ThirdPartyIdentityProviderEnabled = 'third-party-identity-provider-enabled',
   CredentialsSignin = 'CredentialsSignin',
   IsBot = 'is-bot',
+  UserNotActive = 'user-not-active',
 }

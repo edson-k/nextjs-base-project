@@ -5,11 +5,11 @@ import { hashPassword } from '@/utils/hash';
 import { ErrorCode } from "@/utils/ErrorCode";
 import { validatedHuman } from "@/utils/recaptcha";
 
+import { sendActivationLink } from "@/app/api/utils/account";
+
 export const dynamic = 'force-dynamic';
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: {} }) {
+export async function POST(req: NextRequest) {
 
     const newUser = await req.json();
 
@@ -37,6 +37,8 @@ export async function POST(
     // Store new user
     const storeUser = new User(newUser);
     await storeUser.save();
+
+    await sendActivationLink(storeUser);
 
     return NextResponse.json({ success: true, message: 'User signed up successfuly' }, { status: 201 });
 }

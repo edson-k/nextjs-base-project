@@ -6,7 +6,8 @@ import SignIn from '@/components/signin';
 import SignUp from '@/components/signup';
 
 export default function Form() {
-    const [isSignInMode, setSignInMode] = useState<boolean>(false);
+    const [isSignInMode, setSignInMode] = useState<boolean>(true);
+
     return (
         <Flex flexDirection={{ base: 'column', md: 'row' }} w={{ base: '500px', md: '900px' }} h={{ base: '900px', md: '600px' }} boxShadow={'0 0 5px 5px #aaa'} borderRadius={'10px !important'}>
             <Box

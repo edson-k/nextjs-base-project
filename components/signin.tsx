@@ -12,6 +12,7 @@ import TwoFactAuth from '@/components/TwoFactAuth';
 import RecoveryCode from '@/components/RecoveryCode';
 import InputUtil from '@/utils/input';
 import ReCAPTCHA from "react-google-recaptcha";
+import { fetchSendActivation } from '@/app/services/fetchClient';
 
 interface SignInProps {
     isSignInMode: boolean;
@@ -23,11 +24,11 @@ export default function SignIn(props: SignInProps) {
     const [password, setPassword] = useState<string>('');
     const [totpCode, setTotpCode] = useState('');
     const [recoveryCode, setRecoveryCode] = useState('');
-    const [showOTP, setShowOTP] = useState<boolean>(false);
-    const [showRecoveryCode, setShowRecoveryCode] = useState<boolean>(false);
-    const [showPassword, setShowPassword] = useState<boolean>(false);
-    const [showEmail, setShowEmail] = useState<boolean>(true);
     const [step, setStep] = useState<string>('email');
+    const [load, setLoad] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isDisabled, setIsDisabled] = useState<boolean>(false);
+    const [activation, setActivation] = useState<boolean>(false)
     const toast = useToast();
     const router = useRouter();
     const reRef: any = useRef<ReCAPTCHA>();
@@ -37,38 +38,61 @@ export default function SignIn(props: SignInProps) {
     const inputRefTotpCode: any = useRef(null);
     const inputRefRecoveryCode: any = useRef(null);
 
+    if (!load) {
+        InputUtil.focus(inputRefEmail);
+        setLoad(true);
+    }
+
     const recoveryCodeEvent = (event: any) => {
         event.preventDefault();
         setRecoveryCode('');
-        setShowOTP(false);
-        setShowRecoveryCode(true);
         setStep('recoveryCode');
     }
 
     const twoFactAuthEvent = (event: any) => {
         event.preventDefault();
         setRecoveryCode('');
-        setShowRecoveryCode(false);
-        setShowOTP(true);
-        setStep('otp');
+        setStep('2fa');
     }
 
     const signInEvent = () => {
         props.setSignInMode(true);
-        setShowEmail(true);
         setEmail('');
-        setShowPassword(false);
         setPassword('');
-        setShowOTP(false);
         setTotpCode('');
-        setShowRecoveryCode(false);
         setRecoveryCode('');
         InputUtil.focus(inputRefEmail);
         setStep('email');
+        setActivation(false);
+    }
+
+    const sendActivationLink = async () => {
+        setIsLoading(true);
+        setIsDisabled(true);
+        const resp = await fetchSendActivation({ email });
+        const data = await resp.json();
+        if (data.success) {
+            toast({
+                title: 'Activation link sent',
+                status: 'success',
+            });
+            signInEvent();
+        } else {
+            toast({
+                title: 'Sorry something went wrong',
+                description: data.message,
+                status: 'error',
+            });
+        }
+        setIsLoading(false);
+        setIsDisabled(false);
     }
 
     const handleSignIn = async (e: React.SyntheticEvent) => {
         e.preventDefault();
+
+        setIsLoading(true);
+        setIsDisabled(true);
 
         const token = await reRef?.current?.executeAsync();
 
@@ -88,7 +112,18 @@ export default function SignIn(props: SignInProps) {
                         return;
                     }
 
+                    setIsLoading(false);
+                    setIsDisabled(false);
+                    setActivation(false);
+
                     switch (response?.error) {
+                        case ErrorCode.UserNotActive:
+                            toast({
+                                title: 'User is not active',
+                                status: 'error',
+                            });
+                            setActivation(true);
+                            return;
                         case ErrorCode.IsBot:
                             toast({
                                 title: 'You are not human!',
@@ -120,16 +155,10 @@ export default function SignIn(props: SignInProps) {
                             InputUtil.focus(inputRefRecoveryCode);
                             return;
                         case ErrorCode.SecondFactorRequest:
-                            setShowEmail(false);
-                            setShowPassword(false);
-                            setShowOTP(true);
-                            setStep('otp');
+                            setStep('2fa');
                             return;
                         case ErrorCode.SecondFactorRequired:
-                            setShowPassword(false);
-                            setShowRecoveryCode(false);
-                            setShowOTP(true);
-                            setStep('otp');
+                            setStep('2fa');
                             InputUtil.focus(inputRefTotpCode);
                             toast({
                                 title: 'Two Factor Authentication Required',
@@ -137,9 +166,6 @@ export default function SignIn(props: SignInProps) {
                             });
                             return;
                         case ErrorCode.RecoveryCodeRequired:
-                            setShowPassword(false);
-                            setShowOTP(false);
-                            setShowRecoveryCode(true);
                             setStep('recoveryCode');
                             InputUtil.focus(inputRefRecoveryCode);
                             toast({
@@ -157,12 +183,13 @@ export default function SignIn(props: SignInProps) {
                     });
                 });
         } else {
-            setShowEmail(false);
-            setShowPassword(true);
             InputUtil.focus(inputRefPassword);
             setStep('password');
+            setIsLoading(false);
+            setIsDisabled(false);
         }
     };
+
     return (
         <Flex h={'100%'} justifyContent={'center'} alignItems={'center'}>
             {props.isSignInMode ? (
@@ -172,7 +199,7 @@ export default function SignIn(props: SignInProps) {
                     </Heading>
                     <form onSubmit={handleSignIn} style={{ width: '75%' }}>
                         <VStack spacing={5} w={'100%'}>
-                            {showEmail &&
+                            {step === 'email' &&
                                 <>
                                     <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
                                         E-Mail
@@ -181,46 +208,49 @@ export default function SignIn(props: SignInProps) {
                                         <InputGroup>
                                             <InputLeftAddon><AiTwotoneMail /></InputLeftAddon>
                                             <Input type={'email'} placeholder={''} name="email" value={email} onChange={(e) => setEmail(e.target.value)} ref={inputRefEmail} />
-                                            <FormErrorMessage>{email === '' ? 'Email is requi#319795' : 'Invalid email'}</FormErrorMessage>
                                         </InputGroup>
+                                        <FormErrorMessage>{email === '' ? 'Email is requi#319795' : 'Invalid email'}</FormErrorMessage>
                                     </FormControl>
                                 </>
                             }
-                            {showPassword &&
+                            {step === 'password' &&
                                 <>
                                     <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
                                         <b>{email}</b>
                                     </Text>
-                                    <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
-                                        Password
-                                    </Text>
-                                    <FormControl isRequired={true} mb={2}>
-                                        <InputGroup>
-                                            <InputLeftAddon><TbPasswordUser /></InputLeftAddon>
-                                            <Input type={'password'} placeholder="" value={password} onChange={(e) => setPassword(e.target.value)} ref={inputRefPassword} />
+                                    {!activation && <>
+                                        <Text fontSize={'1rem'} textAlign={'center'} color={'black'}>
+                                            Password
+                                        </Text>
+                                        <FormControl isRequired={true} mb={2}>
+                                            <InputGroup>
+                                                <InputLeftAddon><TbPasswordUser /></InputLeftAddon>
+                                                <Input type={'password'} placeholder="" value={password} onChange={(e) => setPassword(e.target.value)} ref={inputRefPassword} />
+                                            </InputGroup>
                                             <FormErrorMessage>Password cannot be less than 8 characters</FormErrorMessage>
-                                        </InputGroup>
-                                    </FormControl>
+                                        </FormControl>
+                                    </>
+                                    }
                                 </>
                             }
-                            {showOTP && <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} refFocus={inputRefTotpCode} />}
-                            {showRecoveryCode && <RecoveryCode value={recoveryCode} onChange={(val) => setRecoveryCode(val)} refFocus={inputRefRecoveryCode} />}
+                            {step === '2fa' && <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} refFocus={inputRefTotpCode} />}
+                            {step === 'recoveryCode' && <RecoveryCode value={recoveryCode} onChange={(val) => setRecoveryCode(val)} refFocus={inputRefRecoveryCode} />}
                         </VStack>
 
                         <Box>
-                            {showPassword ?
+                            {step === 'password' && !activation ?
                                 <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
                                     <Link href="reset-password">Forgot Password?</Link>
                                 </Button>
                                 : ''
                             }
-                            {showOTP ?
+                            {step === '2fa' ?
                                 <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
                                     <a onClick={recoveryCodeEvent}>Use recovery code</a>
                                 </Button>
                                 : ''
                             }
-                            {showRecoveryCode ?
+                            {step === 'recoveryCode' ?
                                 <Button bgColor={'transparent'} fontSize={'0.8rem'} color={'#00000088'} fontFamily={'monospace'} transition={'0.5s'} _hover={{ bgColor: 'transparent', color: '#319795' }}>
                                     <a onClick={twoFactAuthEvent}>Use Two Factor Authentication</a>
                                 </Button>
@@ -229,25 +259,55 @@ export default function SignIn(props: SignInProps) {
                         </Box>
                         {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''} size='invisible' ref={reRef} /> : ''}
                         <br />
-                        <Flex justifyContent={'center'}>
-                            <Button
-                                type="submit"
-                                borderRadius={'full'}
-                                bgColor={'#319795'}
-                                fontFamily={'monospace'}
-                                color={'white'}
-                                _hover={{
-                                    bgColor: 'transparent',
-                                    color: '#319795',
-                                    border: '2px solid #319795',
-                                }}
-                                w={'60%'}
-                            >
-                                SIGN IN
-                            </Button>
-                        </Flex>
                         {
-                            !showEmail ?
+                            activation ?
+                                <Flex justifyContent={'center'} marginBottom={'10px'}>
+                                    <Button
+                                        type="button"
+                                        borderRadius={'full'}
+                                        bgColor={'#ff8a00'}
+                                        border={'2px solid #ff8a00'}
+                                        color={'#fff'}
+                                        fontFamily={'monospace'}
+                                        _hover={{
+                                            bgColor: '#fff',
+                                            color: '#ff8a00',
+                                            border: '2px solid #ff8a00',
+                                        }}
+                                        onClick={() => sendActivationLink()}
+                                        w={'70%'}
+                                        isLoading={isLoading}
+                                        isDisabled={isDisabled}
+                                    >
+                                        RESEND ACTIVATION LINK
+                                    </Button>
+                                </Flex>
+                                : ''
+                        }
+                        {!activation ?
+                            <Flex justifyContent={'center'}>
+                                <Button
+                                    type="submit"
+                                    borderRadius={'full'}
+                                    bgColor={'#319795'}
+                                    fontFamily={'monospace'}
+                                    color={'white'}
+                                    _hover={{
+                                        bgColor: 'transparent',
+                                        color: '#319795',
+                                        border: '2px solid #319795',
+                                    }}
+                                    w={'60%'}
+                                    isLoading={isLoading}
+                                    isDisabled={isDisabled}
+                                >
+                                    SIGN IN
+                                </Button>
+                            </Flex>
+                            : ''
+                        }
+                        {
+                            step !== 'email' ?
                                 <Flex justifyContent={'center'} marginTop={'10px'}>
                                     <Button
                                         type="button"
@@ -263,6 +323,7 @@ export default function SignIn(props: SignInProps) {
                                         }}
                                         onClick={() => signInEvent()}
                                         w={'60%'}
+                                        isDisabled={isDisabled}
                                     >
                                         CANCEL
                                     </Button>

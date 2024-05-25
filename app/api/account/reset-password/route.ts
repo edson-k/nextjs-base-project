@@ -22,8 +22,8 @@ export async function POST(
 
         if (!user) {
             return NextResponse.json({ messge: "User doesn't exists!" }, { status: 422 });
-        } else {
-            const token = await Token.findOne({ userId: user._id });
+        } else if (user.active) {
+            const token = await Token.findOne({ userId: user._id, type: 'password' });
 
             if (token) {
                 await token.deleteOne();
@@ -57,6 +57,8 @@ export async function POST(
                 </div> 
                 `,
             });
+        } else {
+            return NextResponse.json({ success: false, message: 'User not activated!' }, { status: 401 });
         }
     } catch (error: any) {
         return NextResponse.json({ message: error.message }, { status: 400 });

@@ -48,3 +48,25 @@ export const fetchTwoFactorSetup = async (password: string) => {
     const body = await data.json();
     return { body, status: data.status };
 }
+
+export const fetchResetPassword = async (data: any, method: string) => {
+    return await fetch('/api/account/reset-password', {
+        method: method,
+        body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+        },
+    });
+};
+
+export const fetchSendActivation = async (data: any) => {
+    return await fetch('/api/account/activation/send', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+        },
+    });
+}
