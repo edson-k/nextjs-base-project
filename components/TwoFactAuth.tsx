@@ -1,4 +1,5 @@
 import { Flex, Input, Text } from '@chakra-ui/react';
+import { useRef } from 'react';
 import useDigitInput from 'react-digit-input';
 
 export default function TwoFactAuth({ value, onChange, refFocus }: { value: string; onChange: (value: string) => void; refFocus: any }) {
@@ -8,6 +9,9 @@ export default function TwoFactAuth({ value, onChange, refFocus }: { value: stri
         value,
         onChange,
     });
+
+    const inputRef: any = useRef(null);
+    if (!refFocus) refFocus = inputRef;
 
     const className = 'h-12 w-12 !text-xl text-center';
 

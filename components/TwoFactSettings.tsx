@@ -133,7 +133,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
                             <img src={dataUri} style={{ margin: '0 auto' }} />
                         </ModalBody>
                         <ModalFooter>
-                            <Button mr={3} onClick={onClose}>
+                            <Button mr={3} onClick={close}>
                                 Close
                             </Button>
                             <Button colorScheme={'teal'} onClick={() => setStep(SetupStep.EnterTotpCode)}>
@@ -150,7 +150,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
                             <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} refFocus='' />
                         </ModalBody>
                         <ModalFooter>
-                            <Button mr={3} onClick={onClose}>
+                            <Button mr={3} onClick={close}>
                                 Close
                             </Button>
                             <Button colorScheme={'teal'} onClick={() => handleEnable(totpCode)}>
