@@ -11,21 +11,25 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { fetchResetPassword } from '@/app/services/fetchClient';
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function ResetPassword() {
     const [email, setEmail] = useState<string>('');
     const [touched, setTouched] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const toast = useToast();
+    const reRef: any = useRef<ReCAPTCHA>();
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
 
         setIsLoading(true);
 
-        await fetchResetPassword(email, 'POST')
+        const token = await reRef?.current?.executeAsync();
+
+        await fetchResetPassword({ email, token }, 'POST')
             .then(async (res) => {
                 const data = await res.json();
                 if (res.status === 200) {
@@ -85,6 +89,7 @@ export default function ResetPassword() {
                         />
                         <FormErrorMessage>Email is required</FormErrorMessage>
                     </FormControl>
+                    {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''} size='invisible' ref={reRef} /> : ''}
                     <Button
                         type={'submit'}
                         w={'100%'}

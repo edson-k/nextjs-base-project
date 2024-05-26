@@ -5,16 +5,22 @@ import User from '@/models/User';
 import db from '@/utils/db';
 import { hashPassword } from '@/utils/hash';
 import { transporter } from '@/utils/nodemailer';
+import { validatedHuman } from '@/utils/recaptcha';
+import { ErrorCode } from '@/utils/ErrorCode';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: {} }) {
+export async function POST(req: NextRequest) {
 
-    const email = await req.json();
+    const { email, token } = await req.json();
 
     try {
+        // Validate human
+        const human = await validatedHuman(token);
+        if (!human) {
+            return NextResponse.json({ success: false, message: 'You are not human!', error: ErrorCode.IsBot }, { status: 422 });
+        }
+
         await db.connect();
 
         // Check for user existence
