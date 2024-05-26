@@ -5,6 +5,7 @@ import TwoFactAuth from '@/components/TwoFactAuth';
 import { IUser } from '@/models/User';
 import { fetchTwoFactorDisable, fetchTwoFactorEnable, fetchTwoFactorSetup } from '@/app/services/fetchClient';
 import { LockIcon } from '@chakra-ui/icons';
+import Image from 'next/image'
 
 enum SetupStep {
     ConfirmPassword,
@@ -130,7 +131,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
                         <ModalHeader>Enable two-factor authentication</ModalHeader>
                         <ModalBody>
                             <Text marginBottom={'2em'}>Scan the image below with the authenticator app on your phone or manually enter the text code instead.</Text>
-                            <img src={dataUri} style={{ margin: '0 auto' }} />
+                            <Image src={dataUri} width={228} height={228} style={{ margin: '0 auto' }} alt='' />
                         </ModalBody>
                         <ModalFooter>
                             <Button mr={3} onClick={close}>

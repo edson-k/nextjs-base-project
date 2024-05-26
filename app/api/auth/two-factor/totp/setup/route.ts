@@ -3,7 +3,7 @@ import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
 import { symmetricEncrypt } from '@/utils/crypto';
 import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { authOptions } from "@/app/api/auth/[...nextauth]"
 import { ErrorCode } from '@/utils/ErrorCode';
 import User, { IUser } from '@/models/User';
 import { isPasswordValid } from '@/utils/hash';
