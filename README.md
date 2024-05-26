@@ -9,18 +9,15 @@ Example showing a custom sign-in page using NextAuth.js with Two Factor Authenti
 ![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fedson-k%2Fnextjs-base-project%2Fmain%2Fpackage.json&query=%24.dependencies%5B'%40chakra-ui%2Freact'%5D&label=%40chakra-ui%2Freact)
 
 
-
+## DEMO
+[https://nextjs-base-project.edsonk.com.br/](https://nextjs-base-project.edsonk.com.br/)
 
 ## Features
 - Users can manage 2FA
 - Enforce 2FA during login
 - First class integration with NextAuth.js
 - reCAPTCHA
-
-![Screenshot 1](./media/screenshot1.png)
-![Screenshot 2](./media/screenshot2.png)
-![Screenshot 3](./media/screenshot3.png)
-![Screenshot 4](./media/screenshot4.png)
+- OTP
 
 ## 🚀 Getting Started
 
