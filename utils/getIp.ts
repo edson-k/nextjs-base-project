@@ -19,5 +19,6 @@ export const GetIp = () => {
             (header.get('x-forwarded-for') ?? '127.0.0.1').split(',')[0]
             :
             ip;
+    console.log('ip 04', remoteIp);
     return remoteIp;
 }
