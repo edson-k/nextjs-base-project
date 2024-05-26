@@ -13,6 +13,7 @@ import RecoveryCode from '@/components/RecoveryCode';
 import InputUtil from '@/utils/input';
 import ReCAPTCHA from "react-google-recaptcha";
 import { fetchSendActivation } from '@/app/services/fetchClient';
+import OTPCode from '@/components/OTPCode';
 
 interface SignInProps {
     isSignInMode: boolean;
@@ -24,6 +25,7 @@ export default function SignIn(props: SignInProps) {
     const [password, setPassword] = useState<string>('');
     const [totpCode, setTotpCode] = useState('');
     const [recoveryCode, setRecoveryCode] = useState('');
+    const [otpCode, setOtpCode] = useState('');
     const [step, setStep] = useState<string>('email');
     const [load, setLoad] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -37,6 +39,7 @@ export default function SignIn(props: SignInProps) {
     const inputRefPassword: any = useRef(null);
     const inputRefTotpCode: any = useRef(null);
     const inputRefRecoveryCode: any = useRef(null);
+    const inputRefOTPCode: any = useRef(null);
 
     if (!load) {
         InputUtil.focus(inputRefEmail);
@@ -103,6 +106,7 @@ export default function SignIn(props: SignInProps) {
                 password,
                 totpCode,
                 recoveryCode,
+                otpCode,
                 step,
                 token,
             })
@@ -173,6 +177,18 @@ export default function SignIn(props: SignInProps) {
                                 status: 'warning',
                             });
                             return;
+                        case ErrorCode.OTPRequest:
+                            setStep('otp');
+                            InputUtil.focus(inputRefOTPCode);
+                            return;
+                        case ErrorCode.IncorrectOTPCode:
+                            setOtpCode('');
+                            toast({
+                                title: 'Invalid OTP Code',
+                                status: 'error',
+                            });
+                            InputUtil.focus(inputRefOTPCode);
+                            return;
                     }
                 })
                 .catch(() => {
@@ -235,6 +251,7 @@ export default function SignIn(props: SignInProps) {
                             }
                             {step === '2fa' && <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} refFocus={inputRefTotpCode} />}
                             {step === 'recoveryCode' && <RecoveryCode value={recoveryCode} onChange={(val) => setRecoveryCode(val)} refFocus={inputRefRecoveryCode} />}
+                            {step === 'otp' && <OTPCode value={otpCode} onChange={(val) => setOtpCode(val)} refFocus={inputRefOTPCode} />}
                         </VStack>
 
                         <Box>

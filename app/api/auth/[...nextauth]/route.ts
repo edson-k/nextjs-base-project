@@ -7,6 +7,8 @@ import db from '@/utils/db';
 import { ErrorCode } from '@/utils/ErrorCode';
 import { isPasswordValid } from '@/utils/hash';
 import { validatedHuman } from '@/utils/recaptcha';
+import { GetIp } from '@/utils/getIp';
+import { sendOTPCode, validateOTPCode } from '@/app/api/utils/account';
 
 export const authOptions: any = {
     pages: {
@@ -22,7 +24,8 @@ export const authOptions: any = {
                 totpCode: { label: 'Two-factor Code', type: 'input', placeholder: 'Code from authenticator app' },
                 recoveryCode: { label: 'Recovery Code', type: 'input', placeholder: 'Code from recovery authenticator app' },
                 step: { label: 'Step', type: 'input', placeholder: 'Step from authenticator app' },
-                token: { label: 'Token', type: 'input', placeholder: 'Token from reCAPTCHA' }
+                token: { label: 'Token', type: 'input', placeholder: 'Token from reCAPTCHA' },
+                otpCode: { label: 'OTP Code', type: 'input', placeholder: 'Code from email' },
             },
             //@ts-ignore
             async authorize(credentials: any) {
@@ -34,6 +37,7 @@ export const authOptions: any = {
                 }
 
                 await db.connect();
+                const ip = GetIp();
 
                 const user = await User.findOne<IUser>({ email: credentials.email });
 
@@ -101,15 +105,35 @@ export const authOptions: any = {
                             throw new Error(ErrorCode.IncorrectRecoveryCode);
                         }
                     }
-                    console.log('aqui 7');
+                } else {
+                    if (credentials.step === 'password') {
+                        if (user.lastIp !== ip) {
+                            await sendOTPCode(user);
+                            throw new Error(ErrorCode.OTPRequest);
+                        }
+                    } else if (credentials.step === 'otp') {
+                        if (!credentials.otpCode) {
+                            throw new Error(ErrorCode.OTPRequest);
+                        }
+                        const validateOTP = await validateOTPCode(user._id, credentials.otpCode);
+                        if (!validateOTP) {
+                            throw new Error(ErrorCode.IncorrectOTPCode);
+                        }
+                    }
                 }
-                console.log('aqui 8');
 
                 if (user)
-                    return {
-                        name: user.name,
-                        email: user.email,
-                    };
+                    await User.updateOne(
+                        { email: credentials.email },
+                        {
+                            lastIp: ip,
+                            lastConnection: new Date().toISOString(),
+                        }
+                    );
+                return {
+                    name: user.name,
+                    email: user.email,
+                };
             },
         }),
     ],

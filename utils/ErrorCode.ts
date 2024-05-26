@@ -17,4 +17,6 @@ export enum ErrorCode {
   CredentialsSignin = 'CredentialsSignin',
   IsBot = 'is-bot',
   UserNotActive = 'user-not-active',
+  OTPRequest = 'otp-request',
+  IncorrectOTPCode = 'incorrect-otp-code',
 }

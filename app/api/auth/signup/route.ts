@@ -6,6 +6,7 @@ import { ErrorCode } from "@/utils/ErrorCode";
 import { validatedHuman } from "@/utils/recaptcha";
 
 import { sendActivationLink } from "@/app/api/utils/account";
+import { GetIp } from "@/utils/getIp";
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,9 @@ export async function POST(req: NextRequest) {
 
     // Hash Password
     newUser.password = await hashPassword(newUser.password);
+
+    // Ip Address
+    newUser.ip = GetIp();
 
     // Store new user
     const storeUser = new User(newUser);
