@@ -1,10 +1,10 @@
 import { GetServerSidePropsContext } from 'next'
 import { headers } from 'next/headers'
 
-let ip: any = '';
+let ip: string = '';
 
 getServerSideProps: async (context: GetServerSidePropsContext) => {
-    ip = context.req.socket.remoteAddress;
+    ip = context.req.socket.remoteAddress || '';
 }
 
 export const GetIp = () => {
