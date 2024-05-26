@@ -113,7 +113,7 @@ export const authOptions: any = {
                         }
                     } else if (credentials.step === 'otp') {
                         if (!credentials.otpCode) {
-                            throw new Error(ErrorCode.OTPRequest);
+                            throw new Error(ErrorCode.OTPRequired);
                         }
                         const validateOTP = await validateOTPCode(user._id, credentials.otpCode);
                         if (!validateOTP) {

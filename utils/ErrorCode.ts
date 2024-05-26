@@ -18,5 +18,6 @@ export enum ErrorCode {
   IsBot = 'is-bot',
   UserNotActive = 'user-not-active',
   OTPRequest = 'otp-request',
+  OTPRequired = 'otp-required',
   IncorrectOTPCode = 'incorrect-otp-code',
 }

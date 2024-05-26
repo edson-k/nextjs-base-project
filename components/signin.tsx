@@ -181,7 +181,16 @@ export default function SignIn(props: SignInProps) {
                             setStep('otp');
                             InputUtil.focus(inputRefOTPCode);
                             return;
+                        case ErrorCode.OTPRequired:
+                            setStep('otp');
+                            InputUtil.focus(inputRefOTPCode);
+                            toast({
+                                title: 'OTP Code Required',
+                                status: 'warning',
+                            });
+                            return;
                         case ErrorCode.IncorrectOTPCode:
+                            setStep('otp');
                             setOtpCode('');
                             toast({
                                 title: 'Invalid OTP Code',
