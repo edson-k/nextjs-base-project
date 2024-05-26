@@ -5,10 +5,13 @@ let ip: string = '';
 
 getServerSideProps: async (context: GetServerSidePropsContext) => {
     ip = context.req.socket.remoteAddress || '';
+    console.log('ip 01', ip);
 }
 
 export const GetIp = () => {
     const header = headers()
+    console.log('ip 02', header.get('cf-connecting-ip'));
+    console.log('ip 03', header.get('x-forwarded-for'));
     const remoteIp = header.get('cf-connecting-ip') ?
         (header.get('cf-connecting-ip') ?? '127.0.0.1').split(',')[0]
         :
