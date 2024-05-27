@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchResetPassword } from '@/app/services/fetchClient';
 
 interface Props {
@@ -22,6 +22,10 @@ interface Props {
 }
 
 export default function ResetPassword({ params: { token } }: Props) {
+    useEffect(() => {
+        document.title = 'Reset Password | Next.js Base Project'
+    })
+
     const [password, setPassword] = useState<string>('');
     const [touched, setTouched] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);

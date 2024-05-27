@@ -2,6 +2,11 @@ import { Flex, Text } from '@chakra-ui/react';
 import { UserData } from '@/app/services/fetchServer';
 import Content from '@/app/profile/components/content';
 import { redirect } from 'next/navigation'
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: "Profile | Next.js Base Project",
+};
 
 export default async function Profile() {
     const data: any = await UserData();

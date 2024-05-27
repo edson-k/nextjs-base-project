@@ -11,11 +11,15 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { fetchResetPassword } from '@/app/services/fetchClient';
 import ReCAPTCHA from "react-google-recaptcha";
 
 export default function ResetPassword() {
+    useEffect(() => {
+        document.title = 'Reset Password | Next.js Base Project'
+    })
+
     const [email, setEmail] = useState<string>('');
     const [touched, setTouched] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
