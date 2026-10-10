@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        # NEXT_PUBLIC_* é embutida no build; mudar exige rebuild
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}
+    # container_name fixo: é o nome usado em SABLIER_SERVICES
+    container_name: nextjs-base
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      WEB_URI: ${WEB_URI}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      EMAIL: ${EMAIL:-}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      MYAPP: ${MYAPP:-Base Project}
+      RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY:-}
+    networks:
+      - dokploy-network
+    labels:
+      # O router fica no Traefik em arquivo (gerado pelo Sablier, campo "domain" de SABLIER_SERVICES),
+      # para existir mesmo com o container parado e mostrar a tela de espera em vez de 404.
+      - traefik.enable=false
+
+networks:
+  dokploy-network:
+    external: true
