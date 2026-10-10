@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
 import { symmetricEncrypt } from '@/utils/crypto';
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/api/auth/[...nextauth]"
+import { getSessionUser } from '@/utils/session';
+import { rateLimit } from '@/utils/rateLimit';
+import { isString, randomCode, sha256 } from '@/utils/security';
 import { ErrorCode } from '@/utils/ErrorCode';
-import User, { IUser } from '@/models/User';
+import User from '@/models/User';
 import { isPasswordValid } from '@/utils/hash';
-import otpGenerator from 'otp-generator';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,21 +15,14 @@ export async function POST(
     req: NextRequest,
     { params }: { params: {} }) {
 
-    const session: any = await getServerSession(authOptions)
-    if (!session) {
+    const current = await getSessionUser();
+    if (!current) {
         return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
     }
+    const { user } = current;
 
-    if (!session.user?.email) {
-        console.error('Session is missing a user email.');
-        return NextResponse.json({ error: ErrorCode.InternalServerError }, { status: 500 });
-    }
-
-    const user = await User.findOne<IUser>({ email: session.user?.email });
-
-    if (!user) {
-        console.error(`Session references user that no longer exists.`);
-        return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
+    if (!(await rateLimit(`2fa-setup:${user._id}`, 10, 15 * 60))) {
+        return NextResponse.json({ error: ErrorCode.TooManyRequests }, { status: 429 });
     }
 
     if (!user.password) {
@@ -37,7 +30,7 @@ export async function POST(
     }
 
     if (user.twoFactorEnabled) {
-        return NextResponse.json({ error: ErrorCode.TwoFactorAlreadyEnabled }, { status: 200 });
+        return NextResponse.json({ error: ErrorCode.TwoFactorAlreadyEnabled }, { status: 400 });
     }
 
     if (!process.env.ENCRYPTION_KEY) {
@@ -45,8 +38,8 @@ export async function POST(
         return NextResponse.json({ error: ErrorCode.InternalServerError }, { status: 500 });
     }
 
-    const data = await req.json();
-    const isCorrectPassword = await isPasswordValid(data.password, user.password);
+    const data = await req.json().catch(() => null);
+    const isCorrectPassword = isString(data?.password) && await isPasswordValid(data.password, user.password);
 
     if (!isCorrectPassword) {
         return NextResponse.json({ error: ErrorCode.IncorrectPassword }, { status: 400 });
@@ -55,14 +48,15 @@ export async function POST(
     // This generates a secret 32 characters in length. Do not modify the number of
     // bytes without updating the sanity checks in the enable and login endpoints.
     const secret = authenticator.generateSecret(20);
-    const secretRecoveryCode = otpGenerator.generate(6, { specialChars: false });
+    // Shown to the user only once; only its hash is stored
+    const secretRecoveryCode = randomCode(12);
 
     await User.updateOne(
-        { email: session.user?.email },
+        { _id: user._id },
         {
             twoFactorEnabled: false,
             twoFactorSecret: symmetricEncrypt(secret, process.env.ENCRYPTION_KEY),
-            recoveryCode: secretRecoveryCode,
+            recoveryCode: sha256(secretRecoveryCode),
         }
     );
 
@@ -70,5 +64,5 @@ export async function POST(
     const keyUri = authenticator.keyuri(name, (process.env.MYAPP || 'MyApp'), secret);
     const dataUri = await qrcode.toDataURL(keyUri);
 
-    return NextResponse.json({ secret, keyUri, dataUri }, { status: 200 });
+    return NextResponse.json({ secret, keyUri, dataUri, recoveryCode: secretRecoveryCode }, { status: 200 });
 }

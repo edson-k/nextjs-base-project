@@ -1,24 +1,23 @@
-import { GetServerSidePropsContext } from 'next'
-import { headers } from 'next/headers'
+import { headers } from 'next/headers';
 
-let ip: string = '';
+/**
+ * Client IP. Behind Cloudflare/Traefik only the proxy-set headers are trusted:
+ * cf-connecting-ip, then x-real-ip, then the LAST x-forwarded-for hop (the one appended by our proxy).
+ * Keep the origin unreachable except through the proxy, otherwise these headers can be forged.
+ */
+export const GetIp = async () => {
+    const header = await headers();
+    const cf = header.get('cf-connecting-ip');
+    if (cf) return cf.trim();
 
-getServerSideProps: async (context: GetServerSidePropsContext) => {
-    ip = context.req.socket.remoteAddress || '';
-}
+    const real = header.get('x-real-ip');
+    if (real) return real.trim();
 
-export const GetIp = () => {
-    const header = headers()
-    console.log('ip 01', ip);
-    console.log('ip 02', header.get('cf-connecting-ip'));
-    console.log('ip 03', header.get('x-forwarded-for'));
-    const remoteIp = header.get('cf-connecting-ip') ?
-        (header.get('cf-connecting-ip') ?? '127.0.0.1').split(',')[0]
-        :
-        header.get('x-forwarded-for') ?
-            (header.get('x-forwarded-for') ?? '127.0.0.1').split(',')[0]
-            :
-            ip;
-    console.log('ip 04', remoteIp);
-    return remoteIp;
-}
+    const forwarded = header.get('x-forwarded-for');
+    if (forwarded) {
+        const hops = forwarded.split(',').map((h) => h.trim()).filter(Boolean);
+        if (hops.length) return hops[hops.length - 1];
+    }
+
+    return '127.0.0.1';
+};

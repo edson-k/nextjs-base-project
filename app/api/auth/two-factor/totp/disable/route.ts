@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/api/auth/[...nextauth]"
+import { getSessionUser } from '@/utils/session';
+import { rateLimit } from '@/utils/rateLimit';
 import { authenticator } from 'otplib';
-import User, { IUser } from '@/models/User';
+import User from '@/models/User';
 import { symmetricDecrypt } from '@/utils/crypto';
 import { ErrorCode } from '@/utils/ErrorCode';
 import { isPasswordValid } from '@/utils/hash';
+import { isString } from '@/utils/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,21 +14,14 @@ export async function POST(
     req: NextRequest,
     { params }: { params: {} }) {
 
-    const session: any = await getServerSession(authOptions)
-    if (!session) {
+    const current = await getSessionUser();
+    if (!current) {
         return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
     }
+    const { user } = current;
 
-    if (!session?.user?.email) {
-        console.error('Session is missing a user id.');
-        return NextResponse.json({ error: ErrorCode.InternalServerError }, { status: 500 });
-    }
-
-    const user = await User.findOne<IUser>({ email: session.user.email });
-
-    if (!user) {
-        console.error(`Session references user that no longer exists.`);
-        return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
+    if (!(await rateLimit(`2fa-disable:${user._id}`, 10, 15 * 60))) {
+        return NextResponse.json({ error: ErrorCode.TooManyRequests }, { status: 429 });
     }
 
     if (!user.password) {
@@ -40,13 +34,20 @@ export async function POST(
 
     // if user has 2fa
     if (user.twoFactorEnabled) {
-        const data = await req.json();
-        if (!data.totpCode) {
+        const data = await req.json().catch(() => null);
+
+        // exige a senha atual antes de aceitar o TOTP
+        const isCorrectPassword = isString(data?.password) && await isPasswordValid(data.password, user.password);
+        if (!isCorrectPassword) {
+            return NextResponse.json({ error: ErrorCode.IncorrectPassword }, { status: 400 });
+        }
+
+        if (typeof data?.totpCode !== 'string' || !data.totpCode) {
             return NextResponse.json({ error: ErrorCode.SecondFactorRequired }, { status: 400 });
         }
 
         if (!user.twoFactorSecret) {
-            console.error(`Two factor is enabled for user ${user.email} but they have no secret`);
+            console.error(`Two factor is enabled for user ${user._id} but they have no secret`);
             throw new Error(ErrorCode.InternalServerError);
         }
 
@@ -62,7 +63,7 @@ export async function POST(
         }
 
         // If user has 2fa enabled, check if body.totpCode is correct
-        const isValidToken = authenticator.check(data.totpCode, secret);
+        const isValidToken = /^\d{6}$/.test(data.totpCode) && authenticator.check(data.totpCode, secret);
         if (!isValidToken) {
             return NextResponse.json({ error: ErrorCode.IncorrectTwoFactorCode }, { status: 400 });
         }
@@ -70,7 +71,7 @@ export async function POST(
 
     // If it is, disable users 2fa
     await User.updateOne(
-        { email: session.user?.email },
+        { _id: user._id },
         {
             twoFactorEnabled: false,
             twoFactorSecret: null,

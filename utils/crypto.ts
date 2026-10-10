@@ -1,42 +1,41 @@
 import crypto from 'crypto';
 
-const ALGORITHM = 'aes256';
-const INPUT_ENCODING = 'utf8';
-const OUTPUT_ENCODING = 'hex';
-const IV_LENGTH = 16; // AES blocksize
+const VERSION = 'v2';
+const IV_LENGTH = 12; // GCM nonce
+const LEGACY_ALGORITHM = 'aes256';
+
+// Any string works as secret; the AES key is derived from it with SHA-256.
+const deriveKey = (key: string) => crypto.createHash('sha256').update(key).digest();
 
 /**
- *
- * @param text Value to be encrypted
- * @param key Key used to encrypt value must be 32 bytes for AES256 encryption algorithm
- *
- * @returns Encrypted value using key
+ * Encrypts with AES-256-GCM (authenticated). Output: v2:<iv>:<tag>:<ciphertext> (hex).
  */
 export const symmetricEncrypt = function (text: string, key: string) {
-  const _key = Buffer.from(key, 'latin1');
   const iv = crypto.randomBytes(IV_LENGTH);
-
-  const cipher = crypto.createCipheriv(ALGORITHM, _key, iv);
-  let ciphered = cipher.update(text, INPUT_ENCODING, OUTPUT_ENCODING);
-  ciphered += cipher.final(OUTPUT_ENCODING);
-  const ciphertext = iv.toString(OUTPUT_ENCODING) + ':' + ciphered;
-
-  return ciphertext;
+  const cipher = crypto.createCipheriv('aes-256-gcm', deriveKey(key), iv);
+  const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return [VERSION, iv.toString('hex'), tag.toString('hex'), encrypted.toString('hex')].join(':');
 };
 
 /**
- *
- * @param text Value to decrypt
- * @param key Key used to decrypt value must be 32 bytes for AES256 encryption algorithm
+ * Decrypts v2 (GCM) values and legacy AES-256-CBC values (iv:ciphertext) created before the upgrade.
  */
 export const symmetricDecrypt = function (text: string, key: string) {
-  const _key = Buffer.from(key, 'latin1');
-
   const components = text.split(':');
-  const iv_from_ciphertext = Buffer.from(components.shift() || '', OUTPUT_ENCODING);
-  const decipher = crypto.createDecipheriv(ALGORITHM, _key, iv_from_ciphertext);
-  let deciphered = decipher.update(components.join(':'), OUTPUT_ENCODING, INPUT_ENCODING);
-  deciphered += decipher.final(INPUT_ENCODING);
 
+  if (components[0] === VERSION && components.length === 4) {
+    const [, iv, tag, data] = components;
+    const decipher = crypto.createDecipheriv('aes-256-gcm', deriveKey(key), Buffer.from(iv, 'hex'));
+    decipher.setAuthTag(Buffer.from(tag, 'hex'));
+    return Buffer.concat([decipher.update(Buffer.from(data, 'hex')), decipher.final()]).toString('utf8');
+  }
+
+  // legacy
+  const _key = Buffer.from(key, 'latin1');
+  const iv = Buffer.from(components.shift() || '', 'hex');
+  const decipher = crypto.createDecipheriv(LEGACY_ALGORITHM, _key, iv);
+  let deciphered = decipher.update(components.join(':'), 'hex', 'utf8');
+  deciphered += decipher.final('utf8');
   return deciphered;
 };

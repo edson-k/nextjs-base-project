@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/api/auth/[...nextauth]"
+import { getSessionUser } from '@/utils/session';
+import { rateLimit } from '@/utils/rateLimit';
 import { authenticator } from 'otplib';
-import User, { IUser } from '@/models/User';
+import User from '@/models/User';
 import { symmetricDecrypt } from '@/utils/crypto';
 import { ErrorCode } from '@/utils/ErrorCode';
 
@@ -12,21 +12,14 @@ export async function POST(
     req: NextRequest,
     { params }: { params: {} }) {
 
-    const session: any = await getServerSession(authOptions)
-    if (!session) {
+    const current = await getSessionUser();
+    if (!current) {
         return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
     }
+    const { user } = current;
 
-    if (!session.user?.email) {
-        console.error('Session is missing a user email.');
-        return NextResponse.json({ error: ErrorCode.InternalServerError }, { status: 500 });
-    }
-
-    const user = await User.findOne<IUser>({ email: session.user.email });
-
-    if (!user) {
-        console.error(`Session references user that no longer exists.`);
-        return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
+    if (!(await rateLimit(`2fa-enable:${user._id}`, 10, 15 * 60))) {
+        return NextResponse.json({ error: ErrorCode.TooManyRequests }, { status: 429 });
     }
 
     if (user.twoFactorEnabled) {
@@ -48,14 +41,14 @@ export async function POST(
         return NextResponse.json({ error: ErrorCode.InternalServerError }, { status: 500 });
     }
 
-    const data = await req.json();
-    const isValidToken = authenticator.check(data.totpCode, secret);
+    const data = await req.json().catch(() => null);
+    const isValidToken = typeof data?.totpCode === 'string' && /^\d{6}$/.test(data.totpCode) && authenticator.check(data.totpCode, secret);
     if (!isValidToken) {
         return NextResponse.json({ error: ErrorCode.IncorrectTwoFactorCode }, { status: 400 });
     }
 
     await User.updateOne(
-        { email: session.user?.email },
+        { _id: user._id },
         {
             twoFactorEnabled: true,
         }

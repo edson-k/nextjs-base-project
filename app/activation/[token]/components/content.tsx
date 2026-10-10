@@ -80,7 +80,7 @@ const Content = (props: any) => {
                 }
                 // setShowLink(true);
             })
-            .catch((error) => console.log('Error: ', error));
+            .catch(() => {});
     };
 
     return (

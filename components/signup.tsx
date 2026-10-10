@@ -1,7 +1,7 @@
 import { fetchSignUp } from '@/app/services/fetchClient';
 import InputUtil from '@/utils/input';
 import { Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, useToast, VStack } from '@chakra-ui/react';
-import { Dispatch, SetStateAction, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { RiInputField } from "react-icons/ri";
 import { AiTwotoneMail } from "react-icons/ai";
 import { TbPasswordUser } from "react-icons/tb";
@@ -16,20 +16,18 @@ export default function SignUn(props: SignUpProps) {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [isEmailInvalid, setEmailInvalid] = useState<boolean>(false);
-    const [load, setLoad] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(false);
-    const reRef: any = useRef<ReCAPTCHA>();
+    const reRef: any = useRef<ReCAPTCHA | null>(null);
     const toast = useToast();
 
     // Validate inputs
     const validateInputs = () => setEmailInvalid(true);
 
     const inputRefName: any = useRef(null);
-    if (!load) {
+    useEffect(() => {
         InputUtil.focus(inputRefName);
-        setLoad(true);
-    }
+    }, []);
 
     const signUpEvent = () => {
         props.setSignInMode(false)
@@ -37,7 +35,6 @@ export default function SignUn(props: SignUpProps) {
         setName('');
         setEmail('');
         setPassword('');
-        setLoad(false);
     }
 
     const handleSignup = async (e: React.SyntheticEvent) => {

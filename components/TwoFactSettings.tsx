@@ -1,10 +1,9 @@
-import { Modal, ModalOverlay, Flex, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, FormControl, FormLabel, Switch, useDisclosure, Text, Input, useToast, InputGroup, InputLeftAddon, Box } from '@chakra-ui/react';
+import { Modal, ModalOverlay, Flex, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, FormControl, FormLabel, Switch, useDisclosure, Text, Input, useToast } from '@chakra-ui/react';
 import { useState } from 'react';
 import { ErrorCode } from '@/utils/ErrorCode';
 import TwoFactAuth from '@/components/TwoFactAuth';
 import { IUser } from '@/models/User';
 import { fetchTwoFactorDisable, fetchTwoFactorEnable, fetchTwoFactorSetup } from '@/app/services/fetchClient';
-import { LockIcon } from '@chakra-ui/icons';
 import Image from 'next/image'
 
 enum SetupStep {
@@ -13,12 +12,13 @@ enum SetupStep {
     EnterTotpCode,
 }
 
-const WithStep = ({ step, current, children }: { step: SetupStep; current: SetupStep; children: JSX.Element }) => {
+const WithStep = ({ step, current, children }: { step: SetupStep; current: SetupStep; children: React.JSX.Element }) => {
     return step === current ? children : null;
 };
 
 const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onClose: () => void; onEnable: () => void }) => {
     const [dataUri, setDataUri] = useState('');
+    const [recoveryCode, setRecoveryCode] = useState('');
     const [password, setPassword] = useState('');
     const [totpCode, setTotpCode] = useState('');
     const toast = useToast();
@@ -28,6 +28,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
     function close() {
         onClose();
         setPassword('');
+        setRecoveryCode('');
         setStep(SetupStep.ConfirmPassword);
     }
 
@@ -44,6 +45,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
 
             if (response.status === 200) {
                 setDataUri(body.dataUri);
+                setRecoveryCode(body.recoveryCode);
                 setStep(SetupStep.DisplayQrCode);
                 return;
             }
@@ -132,6 +134,8 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
                         <ModalBody>
                             <Text marginBottom={'2em'}>Scan the image below with the authenticator app on your phone or manually enter the text code instead.</Text>
                             <Image src={dataUri} width={228} height={228} style={{ margin: '0 auto' }} alt='' />
+                            <Text marginTop={'1em'}>Recovery code (shown only once, store it safely):</Text>
+                            <Input type={'text'} name="recoveryCode" value={recoveryCode} readOnly />
                         </ModalBody>
                         <ModalFooter>
                             <Button mr={3} onClick={close}>
@@ -166,6 +170,7 @@ const TwoFactSetupModal = ({ isOpen, onClose, onEnable }: { isOpen: boolean; onC
 };
 
 const DisableTwoFactSetupModal = ({ isOpen, onClose, onDisable }: { isOpen: boolean; onClose: () => void; onDisable: () => void }) => {
+    const [password, setPassword] = useState('');
     const [totpCode, setTotpCode] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
@@ -178,9 +183,14 @@ const DisableTwoFactSetupModal = ({ isOpen, onClose, onDisable }: { isOpen: bool
         setIsSubmitting(true);
 
         try {
-            const body = await fetchTwoFactorDisable(totpCode);
+            const body = await fetchTwoFactorDisable(password, totpCode);
 
-            if (body.error === ErrorCode.IncorrectTwoFactorCode) {
+            if (body.error === ErrorCode.IncorrectPassword) {
+                toast({
+                    title: 'Incorrect password. Please try again',
+                    status: 'error',
+                });
+            } else if (body.error === ErrorCode.IncorrectTwoFactorCode) {
                 toast({
                     title: 'Incorrect code. Please try again',
                     status: 'error',
@@ -218,14 +228,15 @@ const DisableTwoFactSetupModal = ({ isOpen, onClose, onDisable }: { isOpen: bool
             <ModalContent>
                 <ModalHeader>Disable two-factor authentication</ModalHeader>
                 <ModalBody>
-                    <Text mb={2}>Enter your code to disable 2FA</Text>
+                    <Text mb={2}>Enter your password and code to disable 2FA</Text>
+                    <Input type={'password'} placeholder="*******" size="md" mb={4} value={password} onChange={(event: any) => setPassword(event.target.value)} />
                     <TwoFactAuth value={totpCode} onChange={(val) => setTotpCode(val)} refFocus='' />
                 </ModalBody>
                 <ModalFooter>
                     <Button mr={3} onClick={onClose}>
                         Close
                     </Button>
-                    <Button colorScheme={'teal'} onClick={handleDisable}>
+                    <Button colorScheme={'teal'} onClick={handleDisable} isLoading={isSubmitting}>
                         Disable
                     </Button>
                 </ModalFooter>
@@ -238,7 +249,6 @@ export default function TwoFactSettings({ user }: { user: IUser }) {
     const { isOpen: isOpenSetupModal, onOpen: onOpenSetupModal, onClose: onCloseSetupModal } = useDisclosure();
     const { isOpen: isOpenDisableModal, onOpen: onOpenDisableModal, onClose: onCloseDisableModal } = useDisclosure();
     const [isEnabled, setEnabled] = useState(user?.twoFactorEnabled);
-    const [recoveryCode, setRecoveryCode] = useState(user?.recoveryCode);
 
     function handleOnEnable() {
         setEnabled(true);
@@ -262,15 +272,6 @@ export default function TwoFactSettings({ user }: { user: IUser }) {
                 </FormControl>
                 <TwoFactSetupModal isOpen={isOpenSetupModal} onClose={onCloseSetupModal} onEnable={handleOnEnable} />
                 <DisableTwoFactSetupModal isOpen={isOpenDisableModal} onClose={onCloseDisableModal} onDisable={handleOnDisable} />
-            </Flex>
-            <Flex justifyContent={'center'} marginTop="2em">
-                {isEnabled ?
-                    <Box display="flex" alignItems="center" justifyContent="center">
-                        <InputGroup>
-                            <InputLeftAddon><LockIcon />&nbsp;2FA Recovery Code</InputLeftAddon>
-                            <Input type={'text'} placeholder={''} name="recoveryCode" value={recoveryCode} readOnly />
-                        </InputGroup>
-                    </Box> : ''}
             </Flex>
         </>
     );

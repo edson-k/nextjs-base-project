@@ -65,7 +65,7 @@ export default function ResetPassword({ params: { token } }: Props) {
                     });
                 }
             })
-            .catch((error) => console.log('Error: ', error));
+            .catch(() => {});
     };
 
     return (

@@ -1,3 +1,4 @@
+import { trusted } from 'mongoose';
 
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { authenticator } from 'otplib';
@@ -7,6 +8,8 @@ import db from '@/utils/db';
 import { ErrorCode } from '@/utils/ErrorCode';
 import { isPasswordValid } from '@/utils/hash';
 import { validatedHuman } from '@/utils/recaptcha';
+import { rateLimit } from '@/utils/rateLimit';
+import { isString, normalizeEmail, safeEqual, sha256 } from '@/utils/security';
 import { GetIp } from '@/utils/getIp';
 import { sendOTPCode, validateOTPCode } from '@/app/api/utils/account';
 
@@ -30,6 +33,11 @@ export const authOptions: any = {
             //@ts-ignore
             async authorize(credentials: any) {
 
+                const email = normalizeEmail(credentials?.email);
+                if (!email || !isString(credentials?.password) || credentials.password.length > 1024) {
+                    return null;
+                }
+
                 // Validate human
                 const human = await validatedHuman(credentials.token);
                 if (!human) {
@@ -37,9 +45,17 @@ export const authOptions: any = {
                 }
 
                 await db.connect();
-                const ip = GetIp();
+                const ip = await GetIp();
 
-                const user = await User.findOne<IUser>({ email: credentials.email });
+                // Brute force protection: per account and per IP
+                const allowed =
+                    (await rateLimit(`login:email:${email}`, 10, 15 * 60)) &&
+                    (await rateLimit(`login:ip:${ip}`, 30, 15 * 60));
+                if (!allowed) {
+                    throw new Error(ErrorCode.TooManyRequests);
+                }
+
+                const user = await User.findOne<IUser>({ email });
 
                 // Check if user exists
                 if (!user) {
@@ -57,15 +73,33 @@ export const authOptions: any = {
                     throw new Error(ErrorCode.UserNotActive);
                 }
 
+                // The required factor is decided by the account state, never by the client "step".
+                // Anything that is not a fully verified factor ends in a throw (deny by default).
                 if (user.twoFactorEnabled) {
-                    if (credentials.step === 'password') {
-                        throw new Error(ErrorCode.SecondFactorRequest);
+                    if (credentials.step === 'recoveryCode') {
+                        if (!isString(credentials.recoveryCode) || !credentials.recoveryCode) {
+                            throw new Error(ErrorCode.RecoveryCodeRequired);
+                        }
+                        if (!user.recoveryCode || !safeEqual(user.recoveryCode, sha256(credentials.recoveryCode.trim().toUpperCase()))) {
+                            throw new Error(ErrorCode.IncorrectRecoveryCode);
+                        }
+                        // Recovery code is single use: disable 2FA and revoke older sessions
+                        await User.updateOne(
+                            { _id: user._id },
+                            {
+                                twoFactorEnabled: false,
+                                twoFactorSecret: null,
+                                recoveryCode: null,
+                                $inc: { sessionVersion: 1 },
+                            }
+                        );
+                        user.sessionVersion = (user.sessionVersion ?? 0) + 1;
                     } else if (credentials.step === '2fa') {
-                        if (!credentials.totpCode) {
+                        if (!isString(credentials.totpCode) || !credentials.totpCode) {
                             throw new Error(ErrorCode.SecondFactorRequired);
                         }
                         if (!user.twoFactorSecret) {
-                            console.error(`Two factor is enabled for user ${user.email} but they have no secret`);
+                            console.error(`Two factor is enabled for user ${user._id} but they have no secret`);
                             throw new Error(ErrorCode.InternalServerError);
                         }
 
@@ -80,67 +114,76 @@ export const authOptions: any = {
                             throw new Error(ErrorCode.InternalServerError);
                         }
 
-                        if (isNaN(credentials.totpCode)) {
+                        if (!/^\d{6}$/.test(credentials.totpCode) || !authenticator.check(credentials.totpCode, secret)) {
                             throw new Error(ErrorCode.IncorrectTwoFactorCode);
-                        } else {
-                            const isValidToken = authenticator.check(credentials.totpCode, secret);
-                            if (!isValidToken) {
-                                throw new Error(ErrorCode.IncorrectTwoFactorCode);
-                            }
                         }
-                    } else if (credentials.step === 'recoveryCode') {
-                        if (!credentials.recoveryCode) {
-                            throw new Error(ErrorCode.RecoveryCodeRequired);
-                        } else if (user.recoveryCode === credentials.recoveryCode) {
-                            // Disable 2FA
-                            await User.updateOne(
-                                { email: credentials.email },
-                                {
-                                    twoFactorEnabled: false,
-                                    twoFactorSecret: null,
-                                    recoveryCode: null,
-                                }
-                            );
-                        } else {
-                            throw new Error(ErrorCode.IncorrectRecoveryCode);
+
+                        // Replay protection: a time step can only be used once
+                        const counter = Math.floor(Date.now() / (authenticator.allOptions().step * 1000));
+                        const claimed = await User.findOneAndUpdate(
+                            { _id: user._id, $or: [{ lastTotpCounter: trusted({ $lt: counter }) }, { lastTotpCounter: null }] },
+                            { lastTotpCounter: counter }
+                        );
+                        if (!claimed) {
+                            throw new Error(ErrorCode.IncorrectTwoFactorCode);
                         }
+                    } else {
+                        throw new Error(ErrorCode.SecondFactorRequest);
                     }
-                } else {
-                    if (credentials.step === 'password') {
-                        if (user.lastIp !== ip) {
-                            await sendOTPCode(user);
-                            throw new Error(ErrorCode.OTPRequest);
-                        }
-                    } else if (credentials.step === 'otp') {
-                        if (!credentials.otpCode) {
+                } else if (user.lastIp !== ip) {
+                    // New IP: email OTP required
+                    if (credentials.step === 'otp') {
+                        if (!isString(credentials.otpCode) || !credentials.otpCode) {
                             throw new Error(ErrorCode.OTPRequired);
                         }
-                        const validateOTP = await validateOTPCode(user._id, credentials.otpCode);
+                        if (!(await rateLimit(`otp:${user._id}`, 5, 5 * 60))) {
+                            throw new Error(ErrorCode.TooManyRequests);
+                        }
+                        const validateOTP = await validateOTPCode(user._id as any, credentials.otpCode.trim().toUpperCase());
                         if (!validateOTP) {
                             throw new Error(ErrorCode.IncorrectOTPCode);
                         }
+                    } else {
+                        if (await rateLimit(`otp-send:${user._id}`, 3, 15 * 60)) {
+                            await sendOTPCode(user);
+                        }
+                        throw new Error(ErrorCode.OTPRequest);
                     }
                 }
 
-                if (user)
-                    await User.updateOne(
-                        { email: credentials.email },
-                        {
-                            lastIp: ip,
-                            lastConnection: new Date().toISOString(),
-                        }
-                    );
+                await User.updateOne(
+                    { _id: user._id },
+                    {
+                        lastIp: ip,
+                        lastConnection: new Date().toISOString(),
+                    }
+                );
                 return {
+                    id: String(user._id),
                     name: user.name,
                     email: user.email,
+                    sessionVersion: user.sessionVersion ?? 0,
                 };
             },
         }),
     ],
 
-    secret: process.env.ENCRYPTION_KEY,
+    callbacks: {
+        async jwt({ token, user }: any) {
+            if (user) {
+                token.sv = user.sessionVersion ?? 0;
+            }
+            return token;
+        },
+        async session({ session, token }: any) {
+            session.sv = token.sv ?? 0;
+            return session;
+        },
+    },
+
+    secret: process.env.NEXTAUTH_SECRET,
     session: {
         strategy: 'jwt',
-        maxAge: 30 * 24 * 60 * 60, // 30 Days
+        maxAge: 7 * 24 * 60 * 60, // 7 Days
     },
 }

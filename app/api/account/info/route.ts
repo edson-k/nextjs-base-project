@@ -1,19 +1,14 @@
 
-import { NextRequest, NextResponse } from "next/server";
-import { authOptions } from "@/app/api/auth/[...nextauth]";
-import User, { IUser } from "@/models/User";
-import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+import { getSessionUser } from "@/utils/session";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
-    req: NextRequest,
-    { params }: { params: {} }) {
+export async function GET() {
 
-    const session: any = await getServerSession(authOptions);
-    const user = await User.findOne<IUser>({ email: session?.user?.email }).select({ password: 0, twoFactorSecret: 0 });
+    const current = await getSessionUser();
 
-    if (!session) {
+    if (!current) {
         return NextResponse.json({
             redirect: {
                 destination: '/',
@@ -22,7 +17,9 @@ export async function GET(
         }, { status: 401 });
     }
 
+    const { password, twoFactorSecret, recoveryCode, lastTotpCounter, sessionVersion, ...user } = current.user.toJSON();
+
     return NextResponse.json({
-        props: { session, user: user?.toJSON() },
+        props: { session: { user: current.session.user, expires: current.session.expires }, user },
     }, { status: 200 });
 }

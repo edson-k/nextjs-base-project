@@ -24,7 +24,7 @@ export default function ResetPassword() {
     const [touched, setTouched] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const toast = useToast();
-    const reRef: any = useRef<ReCAPTCHA>();
+    const reRef: any = useRef<ReCAPTCHA | null>(null);
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
@@ -64,7 +64,7 @@ export default function ResetPassword() {
                     duration: 2000,
                     position: 'top',
                 });
-                console.log('Error: ', error);
+                
             });
     };
 

@@ -3,7 +3,7 @@
 import { Box, Button, Flex, FormControl, FormErrorMessage, Heading, Input, InputGroup, InputLeftAddon, Text, VStack, useToast } from '@chakra-ui/react';
 import { AiTwotoneMail } from "react-icons/ai";
 import { TbPasswordUser } from "react-icons/tb";
-import React, { Dispatch, SetStateAction, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -27,13 +27,12 @@ export default function SignIn(props: SignInProps) {
     const [recoveryCode, setRecoveryCode] = useState('');
     const [otpCode, setOtpCode] = useState('');
     const [step, setStep] = useState<string>('email');
-    const [load, setLoad] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(false);
     const [activation, setActivation] = useState<boolean>(false)
     const toast = useToast();
     const router = useRouter();
-    const reRef: any = useRef<ReCAPTCHA>();
+    const reRef: any = useRef<ReCAPTCHA | null>(null);
 
     const inputRefEmail: any = useRef(null);
     const inputRefPassword: any = useRef(null);
@@ -41,10 +40,9 @@ export default function SignIn(props: SignInProps) {
     const inputRefRecoveryCode: any = useRef(null);
     const inputRefOTPCode: any = useRef(null);
 
-    if (!load) {
+    useEffect(() => {
         InputUtil.focus(inputRefEmail);
-        setLoad(true);
-    }
+    }, []);
 
     const recoveryCodeEvent = (event: any) => {
         event.preventDefault();

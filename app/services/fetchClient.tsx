@@ -22,13 +22,14 @@ export const fetchTwoFactorEnable = async (totpCode: string) => {
     return await data.json();
 }
 
-export const fetchTwoFactorDisable = async (totpCode: string) => {
+export const fetchTwoFactorDisable = async (password: string, totpCode: string) => {
     const data = await fetch(`/api/auth/two-factor/totp/disable`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+            password,
             totpCode,
         }),
     });

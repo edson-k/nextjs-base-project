@@ -10,7 +10,7 @@ const tokenSchema = new mongoose.Schema<IToken>({
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'user' },
   token: { type: String, required: true },
   type: { type: String, required: false, default: 'password' },
-  createdAt: { type: Date, default: Date.now, expires: 300 }, // Exprire in 5 mins
+  createdAt: { type: Date, default: Date.now, expires: 86400 }, // hard TTL 24h; per-type lifetime is enforced in utils/tokens.ts
 });
 
 const Token =

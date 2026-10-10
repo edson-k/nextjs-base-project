@@ -20,4 +20,5 @@ export enum ErrorCode {
   OTPRequest = 'otp-request',
   OTPRequired = 'otp-required',
   IncorrectOTPCode = 'incorrect-otp-code',
+  TooManyRequests = 'too-many-requests',
 }

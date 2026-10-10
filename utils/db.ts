@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 mongoose.set('strictQuery', false);
+// Strips $-operators from user-provided filter values (NoSQL injection)
+mongoose.set('sanitizeFilter', true);
 
 //@ts-ignore
 let cached = global.mongoose;
